@@ -42,13 +42,17 @@ public static class TourYamlSerializer
                 doc.Icons[Scalar(kvp.Key)] = Scalar(kvp.Value);
         }
 
+        var baseDir = Path.GetDirectoryName(Path.GetFullPath(filePath));
+
         if (TryGetMapping(root, "scenes", out var scenesNode))
         {
             foreach (var kvp in scenesNode.Children)
             {
                 var id = Scalar(kvp.Key);
                 var sceneMap = (YamlMappingNode)kvp.Value;
-                doc.Scenes[id] = ParseScene(id, sceneMap);
+                var scene = ParseScene(id, sceneMap);
+                scene.BaseDirectory = baseDir;
+                doc.Scenes[id] = scene;
             }
         }
 

@@ -1,18 +1,23 @@
+using System.Globalization;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Media;
-using Avalonia.Rendering.SceneGraph;
-using Avalonia.Skia;
-using SkiaSharp;
+using Avalonia.Media.Imaging;
 using Zenkei.Models;
 using Zenkei.Models.Markers;
 
 namespace Zenkei.Controls;
 
 /// <summary>
-/// Renders a 2:1 equirectangular panorama image using Skia and allows
-/// placing / moving markers interactively.
+/// Renders a 2:1 equirectangular panorama image and allows placing / moving
+/// markers interactively.
+///
+/// Rendering uses Avalonia's managed <see cref="DrawingContext"/> on the UI
+/// thread. (An earlier version used a raw-Skia <c>ICustomDrawOperation</c>,
+/// which forced the compositor into a continuous per-frame render loop —
+/// pegging the CPU, flickering, and racing UI-thread image disposal against
+/// render-thread drawing.)
 ///
 /// Coordinate system:
 ///   Internal: (yaw_rad, pitch_rad) where yaw ∈ [-π, π], pitch ∈ [0, π] top-to-bottom.
@@ -48,7 +53,8 @@ public class PanoramaCanvas : Control
 
     // ── Private state ─────────────────────────────────────────────────────────
 
-    private SKBitmap? _bitmap;
+    private Bitmap? _bitmap;
+    private int _imgW, _imgH;
     private string? _loadedImagePath;
 
     // pan+zoom — image pixel (x,y) → canvas (x*_scale + _offX, y*_scale + _offY)
@@ -64,11 +70,13 @@ public class PanoramaCanvas : Control
     private bool _dragMoved;
     private Point _dragStart;
 
-    // Pre-rendered marker icons (24×24)
-    private readonly Dictionary<string, SKBitmap> _iconCache = new();
-
     private const float MarkerRadius = 14f;
     private const float HitRadius = 18f;
+
+    public PanoramaCanvas()
+    {
+        ClipToBounds = true;
+    }
 
     // ── Property change reactions ─────────────────────────────────────────────
 
@@ -96,17 +104,20 @@ public class PanoramaCanvas : Control
 
     private void LoadSceneImage()
     {
-        var path = Scene?.Image;
+        var path = Scene?.ResolvedImagePath;
         if (path == _loadedImagePath) return;
         _loadedImagePath = path;
         _bitmap?.Dispose();
         _bitmap = null;
+        _imgW = _imgH = 0;
 
         if (!string.IsNullOrEmpty(path) && File.Exists(path))
         {
             try
             {
-                _bitmap = SKBitmap.Decode(path);
+                _bitmap = new Bitmap(path);
+                _imgW = _bitmap.PixelSize.Width;
+                _imgH = _bitmap.PixelSize.Height;
                 ResetTransform();
             }
             catch { /* ignore bad images */ }
@@ -116,11 +127,11 @@ public class PanoramaCanvas : Control
     private void ResetTransform()
     {
         if (_bitmap == null || Bounds.Width == 0 || Bounds.Height == 0) return;
-        var scaleX = (float)(Bounds.Width / _bitmap.Width);
-        var scaleY = (float)(Bounds.Height / _bitmap.Height);
+        var scaleX = (float)(Bounds.Width / _imgW);
+        var scaleY = (float)(Bounds.Height / _imgH);
         _scale = Math.Min(scaleX, scaleY);
-        _offX = (float)((Bounds.Width - _bitmap.Width * _scale) / 2f);
-        _offY = (float)((Bounds.Height - _bitmap.Height * _scale) / 2f);
+        _offX = (float)((Bounds.Width - _imgW * _scale) / 2f);
+        _offY = (float)((Bounds.Height - _imgH * _scale) / 2f);
     }
 
     protected override void OnSizeChanged(SizeChangedEventArgs e)
@@ -134,85 +145,71 @@ public class PanoramaCanvas : Control
 
     public override void Render(DrawingContext context)
     {
-        context.Custom(new PanoramaDrawOp(this, new Rect(Bounds.Size)));
-        // Request continuous repaint so dragging stays smooth
-        Avalonia.Threading.Dispatcher.UIThread.Post(InvalidateVisual, Avalonia.Threading.DispatcherPriority.Background);
-    }
-
-    internal void RenderSkia(SKCanvas canvas)
-    {
-        canvas.Clear(new SKColor(40, 40, 40));
+        // Background
+        context.FillRectangle(new SolidColorBrush(Color.FromRgb(40, 40, 40)), new Rect(Bounds.Size));
 
         if (_bitmap == null)
         {
-            using var noImgFont = new SKFont(SKTypeface.Default, 18);
-            using var noImgPaint = new SKPaint { Color = SKColors.Gray, IsAntialias = true };
-            canvas.DrawText("No image loaded — select a scene",
-                (float)(Bounds.Width / 2), (float)(Bounds.Height / 2),
-                SKTextAlign.Center, noImgFont, noImgPaint);
+            var msg = new FormattedText(
+                "No image loaded — select a scene",
+                CultureInfo.CurrentCulture, FlowDirection.LeftToRight,
+                new Typeface(FontFamily.Default), 18, Brushes.Gray);
+            context.DrawText(msg, new Point(
+                (Bounds.Width - msg.Width) / 2, (Bounds.Height - msg.Height) / 2));
             return;
         }
 
-        // Draw panorama image
-        canvas.Save();
-        canvas.Translate(_offX, _offY);
-        canvas.Scale(_scale);
-        canvas.DrawBitmap(_bitmap, SKPoint.Empty);
-        canvas.Restore();
+        // Panorama image, scaled+offset by the pan/zoom transform
+        var dest = new Rect(_offX, _offY, _imgW * _scale, _imgH * _scale);
+        context.DrawImage(_bitmap, new Rect(0, 0, _imgW, _imgH), dest);
 
-        // Draw markers
         if (Scene != null)
         {
-            foreach (var m in Scene.Markers)
-                DrawMarker(canvas, m, m == SelectedMarker);
+            // Snapshot to a list so a concurrent edit can't disrupt enumeration
+            foreach (var m in Scene.Markers.ToList())
+                DrawMarker(context, m, m == SelectedMarker);
 
-            // Draw initial-view crosshair
             var (cx, cy) = CoordsToCanvas(Scene.Initial[0], Scene.Initial[1]);
-            DrawCrosshair(canvas, cx, cy);
+            DrawCrosshair(context, cx, cy);
         }
     }
 
-    private void DrawMarker(SKCanvas canvas, MarkerBase m, bool selected)
+    private void DrawMarker(DrawingContext context, MarkerBase m, bool selected)
     {
         if (m.Coords is not { Length: >= 2 }) return;
         var (cx, cy) = CoordsToCanvas(m.Coords[0], m.Coords[1]);
+        var center = new Point(cx, cy);
 
         var (fill, border) = m switch
         {
-            LinkMarker => (new SKColor(30, 100, 220), new SKColor(100, 160, 255)),
-            SceneMarker => (new SKColor(30, 160, 60), new SKColor(80, 200, 100)),
-            _ => (new SKColor(120, 120, 120), new SKColor(200, 200, 200))
+            LinkMarker => (Color.FromRgb(30, 100, 220), Color.FromRgb(100, 160, 255)),
+            SceneMarker => (Color.FromRgb(30, 160, 60), Color.FromRgb(80, 200, 100)),
+            _ => (Color.FromRgb(120, 120, 120), Color.FromRgb(200, 200, 200))
         };
 
-        // Outer ring for selected
         if (selected)
         {
-            using var selPaint = new SKPaint { Color = SKColors.Yellow, Style = SKPaintStyle.Stroke, StrokeWidth = 3, IsAntialias = true };
-            canvas.DrawCircle(cx, cy, MarkerRadius + 4, selPaint);
+            context.DrawEllipse(null, new Pen(Brushes.Yellow, 3),
+                center, MarkerRadius + 4, MarkerRadius + 4);
         }
 
-        // Filled circle
-        using var fillPaint = new SKPaint { Color = fill, Style = SKPaintStyle.Fill, IsAntialias = true };
-        canvas.DrawCircle(cx, cy, MarkerRadius, fillPaint);
+        context.DrawEllipse(new SolidColorBrush(fill), new Pen(new SolidColorBrush(border), 1.5),
+            center, MarkerRadius, MarkerRadius);
 
-        // Border
-        using var borderPaint = new SKPaint { Color = border, Style = SKPaintStyle.Stroke, StrokeWidth = 1.5f, IsAntialias = true };
-        canvas.DrawCircle(cx, cy, MarkerRadius, borderPaint);
-
-        // Letter label
         var letter = m switch { LinkMarker => "L", SceneMarker => "→", _ => "i" };
-        using var txtFont = new SKFont(SKTypeface.Default, 14) { Embolden = m is SceneMarker };
-        using var txtPaint = new SKPaint { Color = SKColors.White, IsAntialias = true };
-        canvas.DrawText(letter, cx, cy + 5, SKTextAlign.Center, txtFont, txtPaint);
+        var txt = new FormattedText(letter, CultureInfo.CurrentCulture, FlowDirection.LeftToRight,
+            new Typeface(FontFamily.Default, weight: m is SceneMarker ? FontWeight.Bold : FontWeight.Normal),
+            14, Brushes.White);
+        context.DrawText(txt, new Point(cx - txt.Width / 2, cy - txt.Height / 2));
     }
 
-    private static void DrawCrosshair(SKCanvas canvas, float cx, float cy)
+    private static void DrawCrosshair(DrawingContext context, float cx, float cy)
     {
-        using var paint = new SKPaint { Color = new SKColor(255, 200, 0, 180), StrokeWidth = 1.5f, IsAntialias = true };
+        var pen = new Pen(new SolidColorBrush(Color.FromArgb(180, 255, 200, 0)), 1.5);
         const float r = 10;
-        canvas.DrawLine(cx - r, cy, cx + r, cy, paint);
-        canvas.DrawLine(cx, cy - r, cx, cy + r, paint);
-        canvas.DrawCircle(cx, cy, 4, paint);
+        context.DrawLine(pen, new Point(cx - r, cy), new Point(cx + r, cy));
+        context.DrawLine(pen, new Point(cx, cy - r), new Point(cx, cy + r));
+        context.DrawEllipse(null, pen, new Point(cx, cy), 4, 4);
     }
 
     // ── Coordinate helpers ────────────────────────────────────────────────────
@@ -220,8 +217,8 @@ public class PanoramaCanvas : Control
     private (float x, float y) CoordsToCanvas(double yaw, double pitch)
     {
         if (_bitmap == null) return (0, 0);
-        var px = (float)((yaw + Math.PI) / (2 * Math.PI) * _bitmap.Width);
-        var py = (float)(pitch / Math.PI * _bitmap.Height);
+        var px = (float)((yaw + Math.PI) / (2 * Math.PI) * _imgW);
+        var py = (float)(pitch / Math.PI * _imgH);
         return (px * _scale + _offX, py * _scale + _offY);
     }
 
@@ -230,10 +227,10 @@ public class PanoramaCanvas : Control
         if (_bitmap == null) return (0, Math.PI / 2);
         var imgX = ((float)pt.X - _offX) / _scale;
         var imgY = ((float)pt.Y - _offY) / _scale;
-        imgX = Math.Clamp(imgX, 0, _bitmap.Width);
-        imgY = Math.Clamp(imgY, 0, _bitmap.Height);
-        var yaw = imgX / _bitmap.Width * 2 * Math.PI - Math.PI;
-        var pitch = imgY / _bitmap.Height * Math.PI;
+        imgX = Math.Clamp(imgX, 0, _imgW);
+        imgY = Math.Clamp(imgY, 0, _imgH);
+        var yaw = imgX / _imgW * 2 * Math.PI - Math.PI;
+        var pitch = imgY / _imgH * Math.PI;
         return (yaw, pitch);
     }
 
@@ -357,17 +354,12 @@ public class PanoramaCanvas : Control
     protected override void OnPointerReleased(PointerReleasedEventArgs e)
     {
         base.OnPointerReleased(e);
-        var pt = e.GetPosition(this);
         e.Pointer.Capture(null);
 
         if (_isPanning) { _isPanning = false; return; }
 
         if (_dragging != null)
         {
-            if (!_dragMoved)
-            {
-                // It was a click, not drag — selection already set in OnPointerPressed
-            }
             _dragging = null;
             _dragMoved = false;
         }
@@ -381,31 +373,4 @@ public class PanoramaCanvas : Control
         var (yaw, pitch) = CanvasToCoords(pt);
         AddMarkerRequested?.Invoke(yaw, pitch);
     }
-}
-
-// ── Custom Skia draw operation ─────────────────────────────────────────────────
-
-internal sealed class PanoramaDrawOp : ICustomDrawOperation
-{
-    private readonly PanoramaCanvas _canvas;
-    public Rect Bounds { get; }
-
-    public PanoramaDrawOp(PanoramaCanvas canvas, Rect bounds)
-    {
-        _canvas = canvas;
-        Bounds = bounds;
-    }
-
-    public bool HitTest(Point p) => Bounds.Contains(p);
-
-    public void Render(ImmediateDrawingContext context)
-    {
-        var feature = context.TryGetFeature<ISkiaSharpApiLeaseFeature>();
-        if (feature is null) return;
-        using var lease = feature.Lease();
-        _canvas.RenderSkia(lease.SkCanvas);
-    }
-
-    public bool Equals(ICustomDrawOperation? other) => false;
-    public void Dispose() { }
 }

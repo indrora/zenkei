@@ -16,6 +16,11 @@ public partial class MarkerEditorViewModel : Tool
     private Scene? _scene;
     private TourDocument? _doc;
 
+    // True while SetMarker is syncing the form to the selected marker, so the
+    // field write-back handlers (esp. OnMarkerTypeChanged, which rebuilds the
+    // marker) don't fire in response to programmatic updates.
+    private bool _syncing;
+
     // ── Panel visibility (only one type group shown at a time) ────────────────
 
     [ObservableProperty] private bool _isLink;
@@ -69,31 +74,39 @@ public partial class MarkerEditorViewModel : Tool
 
         if (marker == null) return;
 
-        // Update available scenes list
-        if (doc != null)
+        _syncing = true;
+        try
         {
-            AvailableScenes = new ObservableCollection<string>(doc.Scenes.Keys);
-            // Rebuild available icons
-            var icons = new List<string> { "link", "info", "scene" };
-            icons.AddRange(doc.Icons.Keys);
-            AvailableIcons = new ObservableCollection<string>(icons);
+            // Update available scenes list
+            if (doc != null)
+            {
+                AvailableScenes = new ObservableCollection<string>(doc.Scenes.Keys);
+                // Rebuild available icons
+                var icons = new List<string> { "link", "info", "scene" };
+                icons.AddRange(doc.Icons.Keys);
+                AvailableIcons = new ObservableCollection<string>(icons);
+            }
+
+            CoordsX = marker.Coords?[0] ?? 0;
+            CoordsY = marker.Coords?[1] ?? Math.PI / 2;
+            SelectedIconName = marker.Marker;
+            MarkerType = marker.Type;
+
+            IsLink = marker is LinkMarker;
+            IsInfo = marker is InfoMarker;
+            IsScene = marker is SceneMarker;
+
+            if (marker is LinkMarker lm) LinkUrl = lm.Url;
+            if (marker is InfoMarker im) InfoText = im.Text;
+            if (marker is SceneMarker sm)
+            {
+                TargetSceneId = sm.TargetScene;
+                SceneText = sm.Text ?? "";
+            }
         }
-
-        CoordsX = marker.Coords?[0] ?? 0;
-        CoordsY = marker.Coords?[1] ?? Math.PI / 2;
-        SelectedIconName = marker.Marker;
-        MarkerType = marker.Type;
-
-        IsLink = marker is LinkMarker;
-        IsInfo = marker is InfoMarker;
-        IsScene = marker is SceneMarker;
-
-        if (marker is LinkMarker lm) LinkUrl = lm.Url;
-        if (marker is InfoMarker im) InfoText = im.Text;
-        if (marker is SceneMarker sm)
+        finally
         {
-            TargetSceneId = sm.TargetScene;
-            SceneText = sm.Text ?? "";
+            _syncing = false;
         }
     }
 
@@ -101,36 +114,45 @@ public partial class MarkerEditorViewModel : Tool
 
     partial void OnCoordsXChanged(double value)
     {
+        if (_syncing) return;
         if (_marker?.Coords is { Length: >= 2 }) { _marker.Coords[0] = value; Dirty(); }
     }
     partial void OnCoordsYChanged(double value)
     {
+        if (_syncing) return;
         if (_marker?.Coords is { Length: >= 2 }) { _marker.Coords[1] = value; Dirty(); }
     }
     partial void OnSelectedIconNameChanged(string? value)
     {
+        if (_syncing) return;
         if (_marker != null) { _marker.Marker = value; Dirty(); }
     }
     partial void OnLinkUrlChanged(string value)
     {
+        if (_syncing) return;
         if (_marker is LinkMarker lm) { lm.Url = value; Dirty(); }
     }
     partial void OnInfoTextChanged(string value)
     {
+        if (_syncing) return;
         if (_marker is InfoMarker im) { im.Text = value; Dirty(); }
     }
     partial void OnTargetSceneIdChanged(string? value)
     {
+        if (_syncing) return;
         if (_marker is SceneMarker sm) { sm.TargetScene = value ?? ""; Dirty(); }
     }
     partial void OnSceneTextChanged(string value)
     {
+        if (_syncing) return;
         if (_marker is SceneMarker sm) { sm.Text = string.IsNullOrEmpty(value) ? null : value; Dirty(); }
     }
 
     partial void OnMarkerTypeChanged(string value)
     {
-        // Type change replaces the marker in the scene
+        // Type change replaces the marker in the scene — but only when the user
+        // picks a new type, not while SetMarker is syncing the form to selection.
+        if (_syncing) return;
         if (_scene == null || _marker == null) return;
         var idx = _scene.Markers.IndexOf(_marker);
         if (idx < 0) return;
