@@ -135,6 +135,21 @@ public partial class MainWindowViewModel : ViewModelBase
         }
     }
 
+    // ── Startup file open (command-line arg) ─────────────────────────────────
+
+    public void OpenDocumentFromPath(string path)
+    {
+        try
+        {
+            var doc = Serialization.TourYamlSerializer.Load(path);
+            _editors.Clear();
+            Document = doc;
+            IsDirty = false;
+            ScenePanel.LoadFromDocument(doc);
+        }
+        catch { /* silently ignore bad files on startup */ }
+    }
+
     // ── Scene / tab management ────────────────────────────────────────────────
 
     public void OpenScene(Scene scene)
