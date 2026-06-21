@@ -4,6 +4,7 @@
              xmlns:local="using:PanoTool"
              xmlns:vm="using:PanoTool.ViewModels"
              xmlns:views="using:PanoTool.Views"
+             xmlns:dockFluent="using:Dock.Avalonia.Themes.Fluent"
              RequestedThemeVariant="Dark">
 
     <Application.DataTemplates>
@@ -23,5 +24,6 @@
 
     <Application.Styles>
         <FluentTheme />
+        <dockFluent:DockFluentTheme/>
     </Application.Styles>
 </Application>

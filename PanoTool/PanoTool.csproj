@@ -26,6 +26,7 @@
     </PackageReference>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.1" />
     <PackageReference Include="Dock.Avalonia" Version="12.0.0.2" />
+    <PackageReference Include="Dock.Avalonia.Themes.Fluent" Version="12.0.0.2" />
     <PackageReference Include="Dock.Model.Mvvm" Version="12.0.0.2" />
     <PackageReference Include="FluentIcons.Avalonia" Version="2.1.330" />
     <PackageReference Include="SkiaSharp" Version="3.119.4" />
