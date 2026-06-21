@@ -1,0 +1,71 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:PanoTool.ViewModels"
+             x:Class="PanoTool.Views.MarkerEditorView"
+             x:DataType="vm:MarkerEditorViewModel">
+
+  <ScrollViewer>
+    <StackPanel Margin="8,4" Spacing="6"
+                IsEnabled="{Binding HasMarker}">
+
+      <TextBlock Text="No marker selected" FontStyle="Italic" Opacity="0.6"
+                 IsVisible="{Binding !HasMarker}"/>
+
+      <StackPanel IsVisible="{Binding HasMarker}" Spacing="6">
+
+        <TextBlock Text="Type" Classes="FormLabel"/>
+        <ComboBox ItemsSource="{Binding MarkerTypes}"
+                  SelectedItem="{Binding MarkerType}"
+                  HorizontalAlignment="Stretch"/>
+
+        <TextBlock Text="Icon" Classes="FormLabel"/>
+        <ComboBox ItemsSource="{Binding AvailableIcons}"
+                  SelectedItem="{Binding SelectedIconName}"
+                  HorizontalAlignment="Stretch"
+                  PlaceholderText="(default)"/>
+
+        <Grid ColumnDefinitions="*,6,*">
+          <TextBlock Grid.Column="0" Text="Yaw (X)" Classes="FormLabel"/>
+          <TextBlock Grid.Column="2" Text="Pitch (Y)" Classes="FormLabel"/>
+        </Grid>
+        <Grid ColumnDefinitions="*,6,*">
+          <NumericUpDown Grid.Column="0" Value="{Binding CoordsX}"
+                         Minimum="-3.1416" Maximum="3.1416"
+                         FormatString="F4" Increment="0.01"/>
+          <NumericUpDown Grid.Column="2" Value="{Binding CoordsY}"
+                         Minimum="0" Maximum="3.1416"
+                         FormatString="F4" Increment="0.01"/>
+        </Grid>
+
+        <!-- Link fields -->
+        <StackPanel IsVisible="{Binding IsLink}" Spacing="4">
+          <Separator/>
+          <TextBlock Text="URL" Classes="FormLabel"/>
+          <TextBox Text="{Binding LinkUrl}" Watermark="https://…"/>
+        </StackPanel>
+
+        <!-- Info fields -->
+        <StackPanel IsVisible="{Binding IsInfo}" Spacing="4">
+          <Separator/>
+          <TextBlock Text="Text" Classes="FormLabel"/>
+          <TextBox Text="{Binding InfoText}"
+                   AcceptsReturn="True" Height="100"
+                   Watermark="Marker description…"/>
+        </StackPanel>
+
+        <!-- Scene link fields -->
+        <StackPanel IsVisible="{Binding IsScene}" Spacing="4">
+          <Separator/>
+          <TextBlock Text="Target Scene" Classes="FormLabel"/>
+          <ComboBox ItemsSource="{Binding AvailableScenes}"
+                    SelectedItem="{Binding TargetSceneId}"
+                    HorizontalAlignment="Stretch"
+                    PlaceholderText="Select scene…"/>
+          <TextBlock Text="Label" Classes="FormLabel"/>
+          <TextBox Text="{Binding SceneText}" Watermark="Transition label"/>
+        </StackPanel>
+
+      </StackPanel>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

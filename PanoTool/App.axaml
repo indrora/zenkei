@@ -1,0 +1,27 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="PanoTool.App"
+             xmlns:local="using:PanoTool"
+             xmlns:vm="using:PanoTool.ViewModels"
+             xmlns:views="using:PanoTool.Views"
+             RequestedThemeVariant="Dark">
+
+    <Application.DataTemplates>
+        <!-- Explicit templates for Dock tool/document ViewModels -->
+        <DataTemplate DataType="vm:ScenePanelViewModel">
+            <views:ScenePanelView/>
+        </DataTemplate>
+        <DataTemplate DataType="vm:MarkerEditorViewModel">
+            <views:MarkerEditorView/>
+        </DataTemplate>
+        <DataTemplate DataType="vm:PanoramaEditorViewModel">
+            <views:PanoramaEditorView/>
+        </DataTemplate>
+        <!-- Fallback ViewLocator for any other ViewModelBase -->
+        <local:ViewLocator/>
+    </Application.DataTemplates>
+
+    <Application.Styles>
+        <FluentTheme />
+    </Application.Styles>
+</Application>

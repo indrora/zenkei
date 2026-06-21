@@ -1,0 +1,78 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:PanoTool.ViewModels"
+             xmlns:models="using:PanoTool.Models"
+             x:Class="PanoTool.Views.ScenePanelView"
+             x:DataType="vm:ScenePanelViewModel">
+
+  <DockPanel>
+
+    <!-- Header row: label + buttons -->
+    <Border DockPanel.Dock="Top"
+            BorderBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+            BorderThickness="0,0,0,1" Padding="6,4">
+      <DockPanel>
+        <TextBlock Text="Scenes" FontWeight="SemiBold" VerticalAlignment="Center"/>
+        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="4">
+          <Button Command="{Binding AddImageCommand}"
+                  ToolTip.Tip="Add image as new scene"
+                  Padding="6,2">+</Button>
+          <Button Command="{Binding RemoveSceneCommand}"
+                  ToolTip.Tip="Remove selected scene"
+                  Padding="6,2">−</Button>
+        </StackPanel>
+      </DockPanel>
+    </Border>
+
+    <!-- Scene metadata form (shown when a scene is selected) -->
+    <ScrollViewer DockPanel.Dock="Bottom" MaxHeight="280">
+      <StackPanel Margin="8,4" Spacing="4"
+                  IsVisible="{Binding HasSelectedScene}">
+
+        <Separator/>
+        <TextBlock Text="Scene Info" FontWeight="SemiBold" FontSize="12"/>
+
+        <TextBlock Text="Title" Classes="FormLabel"/>
+        <TextBox Text="{Binding SceneTitle}" Watermark="Scene title"/>
+
+        <TextBlock Text="Description" Classes="FormLabel"/>
+        <TextBox Text="{Binding SceneDescription}"
+                 AcceptsReturn="True" Height="52"
+                 Watermark="Optional description"/>
+
+        <TextBlock Text="Image" Classes="FormLabel"/>
+        <TextBox Text="{Binding SceneImage}" IsReadOnly="True"
+                 FontSize="10" Opacity="0.7"/>
+
+        <TextBlock Text="HFOV" Classes="FormLabel"/>
+        <NumericUpDown Value="{Binding SceneHFov}"
+                       Minimum="20" Maximum="180"
+                       FormatString="F0" Increment="5"/>
+
+        <TextBlock Text="Initial view (yaw / pitch in radians)" Classes="FormLabel"/>
+        <Grid ColumnDefinitions="*,6,*">
+          <NumericUpDown Grid.Column="0" Value="{Binding SceneInitialX}"
+                         Minimum="-3.1416" Maximum="3.1416"
+                         FormatString="F4" Increment="0.05"
+                         ToolTip.Tip="Yaw (-π … π)"/>
+          <NumericUpDown Grid.Column="2" Value="{Binding SceneInitialY}"
+                         Minimum="0" Maximum="3.1416"
+                         FormatString="F4" Increment="0.05"
+                         ToolTip.Tip="Pitch (0=top, π=bottom)"/>
+        </Grid>
+
+      </StackPanel>
+    </ScrollViewer>
+
+    <!-- Scene list -->
+    <ListBox ItemsSource="{Binding Scenes}"
+             SelectedItem="{Binding SelectedScene}">
+      <ListBox.ItemTemplate>
+        <DataTemplate DataType="models:Scene">
+          <TextBlock Text="{Binding Title}" Padding="4,2"/>
+        </DataTemplate>
+      </ListBox.ItemTemplate>
+    </ListBox>
+
+  </DockPanel>
+</UserControl>
