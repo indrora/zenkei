@@ -1,0 +1,93 @@
+information:
+  title: Grid Test Tour
+  author: PanoTool
+
+default:
+  hfov: 100
+
+scenes:
+  pano_sunset:
+    image: pano_sunset.jpg
+    title: Sunset
+    description: Deep purple sky fading to burnt orange horizon.
+    initial: [0.0, 1.5708]
+    markers:
+      - type: info
+        coords: [0.0, 1.5708]
+        text: "You are looking due east at the equator (yaw=0deg, pitch=0deg)."
+      - type: info
+        coords: [-1.5708, 1.0472]
+        text: "Northwest sky -- 30deg above the horizon looking west (-90deg yaw, +30deg elev)."
+      - type: scene
+        coords: [1.5708, 1.5708]
+        scene: pano_arctic
+        text: "Head east to the Arctic"
+      - type: link
+        coords: [3.1416, 1.5708]
+        url: "https://pannellum.org"
+        text: "Pannellum viewer"
+
+  pano_arctic:
+    image: pano_arctic.jpg
+    title: Arctic
+    description: Pale ice-blue gradient from zenith to ground.
+    initial: [-0.5236, 1.3090]
+    markers:
+      - type: info
+        coords: [0.0, 0.5236]
+        text: "Looking up at 60deg elevation."
+      - type: info
+        coords: [1.0472, 1.5708]
+        text: "Due east at the equator (+60deg yaw)."
+      - type: scene
+        coords: [-1.5708, 1.5708]
+        scene: pano_forest
+        text: "Head west into the Forest"
+      - type: scene
+        coords: [0.0, 1.5708]
+        scene: pano_sunset
+        text: "Back to Sunset"
+
+  pano_forest:
+    image: pano_forest.jpg
+    title: Forest
+    description: Dark forest-green canopy gradient.
+    initial: [0.7854, 1.2217]
+    markers:
+      - type: info
+        coords: [0.0, 1.5708]
+        text: "Prime meridian equator crossing."
+      - type: info
+        coords: [-3.1416, 2.0944]
+        text: "Anti-meridian, 30deg below horizon."
+      - type: link
+        coords: [0.5236, 1.5708]
+        url: "https://github.com/wieslawsoltes/Dock"
+        text: "Dock.Avalonia on GitHub"
+      - type: scene
+        coords: [1.5708, 1.5708]
+        scene: pano_desert
+        text: "On to the Desert"
+
+  pano_desert:
+    image: pano_desert.jpg
+    title: Desert
+    description: Sky-blue fading through golden sand.
+    initial: [-0.7854, 1.3963]
+    markers:
+      - type: info
+        coords: [0.0, 1.5708]
+        text: "Equator, facing east. The golden horizon."
+      - type: info
+        coords: [0.0, 2.6180]
+        text: "Nadir region -- looking nearly straight down (-60deg elevation)."
+      - type: scene
+        coords: [-1.5708, 1.5708]
+        scene: pano_sunset
+        text: "Back to Sunset (full loop)"
+      - type: scene
+        coords: [1.5708, 1.5708]
+        scene: pano_forest
+        text: "Back to Forest"
+
+markers: {}
