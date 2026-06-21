@@ -1,10 +1,10 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Dock.Model.Mvvm.Controls;
-using PanoTool.Models;
-using PanoTool.Models.Markers;
+using Zenkei.Models;
+using Zenkei.Models.Markers;
 
-namespace PanoTool.ViewModels;
+namespace Zenkei.ViewModels;
 
 /// <summary>
 /// Right dock tool: edits the currently selected marker.

@@ -3,7 +3,7 @@ using Dock.Model.Core;
 using Dock.Model.Mvvm;
 using Dock.Model.Mvvm.Controls;
 
-namespace PanoTool.ViewModels;
+namespace Zenkei.ViewModels;
 
 /// <summary>
 /// Builds the three-pane IDE-style dock layout:

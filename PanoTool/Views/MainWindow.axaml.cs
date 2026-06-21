@@ -1,8 +1,8 @@
 using Avalonia.Controls;
 using Avalonia.Platform.Storage;
-using PanoTool.ViewModels;
+using Zenkei.ViewModels;
 
-namespace PanoTool.Views;
+namespace Zenkei.Views;
 
 public partial class MainWindow : Window
 {

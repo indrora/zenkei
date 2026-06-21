@@ -1,10 +1,10 @@
 using System.Globalization;
 using System.Text;
 using System.Text.Json;
-using PanoTool.Models;
-using PanoTool.Models.Markers;
+using Zenkei.Models;
+using Zenkei.Models.Markers;
 
-namespace PanoTool.Serialization;
+namespace Zenkei.Serialization;
 
 /// <summary>
 /// Exports a TourDocument to a Pannellum-compatible HTML/JSON tour package.

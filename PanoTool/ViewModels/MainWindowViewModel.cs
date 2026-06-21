@@ -2,10 +2,10 @@ using System.Collections.Generic;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Dock.Model.Controls;
-using PanoTool.Models;
-using PanoTool.Serialization;
+using Zenkei.Models;
+using Zenkei.Serialization;
 
-namespace PanoTool.ViewModels;
+namespace Zenkei.ViewModels;
 
 public partial class MainWindowViewModel : ViewModelBase
 {
@@ -32,8 +32,8 @@ public partial class MainWindowViewModel : ViewModelBase
     private bool _isDirty;
 
     public string WindowTitle => Document.FilePath != null
-        ? $"{Path.GetFileName(Document.FilePath)}{(IsDirty ? "*" : "")} — PanoTool"
-        : $"Untitled{(IsDirty ? "*" : "")} — PanoTool";
+        ? $"{Path.GetFileName(Document.FilePath)}{(IsDirty ? "*" : "")} — Zenkei"
+        : $"Untitled{(IsDirty ? "*" : "")} — Zenkei";
 
     // Maps sceneId → open editor (so we reuse tabs instead of duplicating)
     private readonly Dictionary<string, PanoramaEditorViewModel> _editors = new();

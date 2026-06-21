@@ -1,8 +1,8 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:vm="using:PanoTool.ViewModels"
-             xmlns:models="using:PanoTool.Models"
-             x:Class="PanoTool.Views.ScenePanelView"
+             xmlns:vm="using:Zenkei.ViewModels"
+             xmlns:models="using:Zenkei.Models"
+             x:Class="Zenkei.Views.ScenePanelView"
              x:DataType="vm:ScenePanelViewModel">
 
   <DockPanel>
@@ -33,12 +33,12 @@
         <TextBlock Text="Scene Info" FontWeight="SemiBold" FontSize="12"/>
 
         <TextBlock Text="Title" Classes="FormLabel"/>
-        <TextBox Text="{Binding SceneTitle}" Watermark="Scene title"/>
+        <TextBox Text="{Binding SceneTitle}" PlaceholderText="Scene title"/>
 
         <TextBlock Text="Description" Classes="FormLabel"/>
         <TextBox Text="{Binding SceneDescription}"
                  AcceptsReturn="True" Height="52"
-                 Watermark="Optional description"/>
+                 PlaceholderText="Optional description"/>
 
         <TextBlock Text="Image" Classes="FormLabel"/>
         <TextBox Text="{Binding SceneImage}" IsReadOnly="True"

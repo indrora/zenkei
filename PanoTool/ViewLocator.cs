@@ -2,9 +2,9 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using Avalonia.Controls;
 using Avalonia.Controls.Templates;
-using PanoTool.ViewModels;
+using Zenkei.ViewModels;
 
-namespace PanoTool;
+namespace Zenkei;
 
 /// <summary>
 /// Given a view model, returns the corresponding view if possible.

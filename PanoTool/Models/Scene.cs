@@ -1,6 +1,6 @@
-using PanoTool.Models.Markers;
+using Zenkei.Models.Markers;
 
-namespace PanoTool.Models;
+namespace Zenkei.Models;
 
 public class Scene
 {

@@ -1,10 +1,10 @@
 using System.Globalization;
 using System.Text;
-using PanoTool.Models;
-using PanoTool.Models.Markers;
+using Zenkei.Models;
+using Zenkei.Models.Markers;
 using YamlDotNet.RepresentationModel;
 
-namespace PanoTool.Serialization;
+namespace Zenkei.Serialization;
 
 /// <summary>
 /// Loads and saves TourDocument to/from the YAML schema.

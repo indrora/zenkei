@@ -1,4 +1,4 @@
-namespace PanoTool.Models;
+namespace Zenkei.Models;
 
 public class TourDefaults
 {

@@ -1,10 +1,10 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
-using PanoTool.Controls;
-using PanoTool.Models.Markers;
-using PanoTool.ViewModels;
+using Zenkei.Controls;
+using Zenkei.Models.Markers;
+using Zenkei.ViewModels;
 
-namespace PanoTool.Views;
+namespace Zenkei.Views;
 
 public partial class PanoramaEditorView : UserControl
 {

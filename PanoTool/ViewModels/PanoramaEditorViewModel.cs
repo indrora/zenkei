@@ -1,9 +1,9 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using Dock.Model.Mvvm.Controls;
-using PanoTool.Models;
-using PanoTool.Models.Markers;
+using Zenkei.Models;
+using Zenkei.Models.Markers;
 
-namespace PanoTool.ViewModels;
+namespace Zenkei.ViewModels;
 
 /// <summary>
 /// ViewModel for one panorama editor tab in the center DocumentDock.

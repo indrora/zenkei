@@ -3,10 +3,10 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Media.Imaging;
 using Avalonia.Markup.Xaml;
-using PanoTool.ViewModels;
-using PanoTool.Views;
+using Zenkei.ViewModels;
+using Zenkei.Views;
 
-namespace PanoTool;
+namespace Zenkei;
 
 public partial class App : Application
 {

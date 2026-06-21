@@ -1,7 +1,7 @@
-﻿using Avalonia;
+using Avalonia;
 using System;
 
-namespace PanoTool;
+namespace Zenkei;
 
 sealed class Program
 {

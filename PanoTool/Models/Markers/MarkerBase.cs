@@ -1,4 +1,4 @@
-namespace PanoTool.Models.Markers;
+namespace Zenkei.Models.Markers;
 
 public abstract class MarkerBase
 {

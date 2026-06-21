@@ -5,10 +5,10 @@ using Avalonia.Media;
 using Avalonia.Rendering.SceneGraph;
 using Avalonia.Skia;
 using SkiaSharp;
-using PanoTool.Models;
-using PanoTool.Models.Markers;
+using Zenkei.Models;
+using Zenkei.Models.Markers;
 
-namespace PanoTool.Controls;
+namespace Zenkei.Controls;
 
 /// <summary>
 /// Renders a 2:1 equirectangular panorama image using Skia and allows

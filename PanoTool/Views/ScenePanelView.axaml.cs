@@ -1,6 +1,6 @@
 using Avalonia.Controls;
 
-namespace PanoTool.Views;
+namespace Zenkei.Views;
 
 public partial class ScenePanelView : UserControl
 {

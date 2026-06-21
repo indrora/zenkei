@@ -1,7 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:vm="using:PanoTool.ViewModels"
-             x:Class="PanoTool.Views.MarkerEditorView"
+             xmlns:vm="using:Zenkei.ViewModels"
+             x:Class="Zenkei.Views.MarkerEditorView"
              x:DataType="vm:MarkerEditorViewModel">
 
   <ScrollViewer>
@@ -41,7 +41,7 @@
         <StackPanel IsVisible="{Binding IsLink}" Spacing="4">
           <Separator/>
           <TextBlock Text="URL" Classes="FormLabel"/>
-          <TextBox Text="{Binding LinkUrl}" Watermark="https://…"/>
+          <TextBox Text="{Binding LinkUrl}" PlaceholderText="https://…"/>
         </StackPanel>
 
         <!-- Info fields -->
@@ -50,7 +50,7 @@
           <TextBlock Text="Text" Classes="FormLabel"/>
           <TextBox Text="{Binding InfoText}"
                    AcceptsReturn="True" Height="100"
-                   Watermark="Marker description…"/>
+                   PlaceholderText="Marker description…"/>
         </StackPanel>
 
         <!-- Scene link fields -->
@@ -62,7 +62,7 @@
                     HorizontalAlignment="Stretch"
                     PlaceholderText="Select scene…"/>
           <TextBlock Text="Label" Classes="FormLabel"/>
-          <TextBox Text="{Binding SceneText}" Watermark="Transition label"/>
+          <TextBox Text="{Binding SceneText}" PlaceholderText="Transition label"/>
         </StackPanel>
 
       </StackPanel>
