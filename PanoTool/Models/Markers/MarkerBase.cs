@@ -1,13 +1,24 @@
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
+
 namespace Zenkei.Models.Markers;
 
-public abstract class MarkerBase
+public abstract class MarkerBase : INotifyPropertyChanged
 {
-    // "link" | "info" | "scene"
+    public event PropertyChangedEventHandler? PropertyChanged;
+
+    protected void OnPropertyChanged([CallerMemberName] string? name = null)
+        => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+
+    // Type and Coords are managed by the marker editor header, not the PropertyGrid
+    [Browsable(false)]
     public abstract string Type { get; }
 
-    // [yaw_rad, pitch_from_top_rad] — x in -π..π, y in 0..π
+    // [yaw_rad, pitch_from_top_rad] — edited via NumericUpDowns above the PropertyGrid
+    [Browsable(false)]
     public double[]? Coords { get; set; }
 
-    // Name of a named icon defined in TourDocument.Icons
-    public string? Marker { get; set; }
+    private string? _marker;
+    [Category("Appearance"), Description("Named icon override from the tour's icon library")]
+    public string? Marker { get => _marker; set { _marker = value; OnPropertyChanged(); } }
 }

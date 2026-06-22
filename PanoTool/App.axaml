@@ -18,6 +18,9 @@
         <DataTemplate DataType="vm:PanoramaEditorViewModel">
             <views:PanoramaEditorView/>
         </DataTemplate>
+        <DataTemplate DataType="vm:OutputViewModel">
+            <views:OutputView/>
+        </DataTemplate>
         <!-- Fallback ViewLocator for any other ViewModelBase -->
         <local:ViewLocator/>
     </Application.DataTemplates>

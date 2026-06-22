@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.Input;
 using Dock.Model.Controls;
 using Zenkei.Models;
 using Zenkei.Serialization;
+using Zenkei.Services;
 
 namespace Zenkei.ViewModels;
 
@@ -49,7 +50,7 @@ public partial class MainWindowViewModel : ViewModelBase
         ScenePanel = new ScenePanelViewModel(this);
         MarkerEditor = new MarkerEditorViewModel(this);
 
-        DockFactory = new DockFactory(ScenePanel, MarkerEditor);
+        DockFactory = new DockFactory(ScenePanel, MarkerEditor, new OutputViewModel());
         Layout = DockFactory.CreateLayout();
         DockFactory.InitLayout(Layout);
     }
@@ -78,6 +79,7 @@ public partial class MainWindowViewModel : ViewModelBase
             Document = doc;
             IsDirty = false;
             ScenePanel.LoadFromDocument(doc);
+            AppLog.Info($"Opened: {Path.GetFileName(path)}");
         }
         catch (Exception ex)
         {
@@ -113,7 +115,9 @@ public partial class MainWindowViewModel : ViewModelBase
         outDir = Path.GetDirectoryName(outDir) ?? outDir;
         try
         {
-            PannellumExporter.Export(Document, outDir);
+            AppLog.Info($"Exporting to: {outDir}");
+            PannellumExporter.Export(Document, outDir, log: msg => AppLog.Info(msg));
+            AppLog.Info("Export complete.");
         }
         catch (Exception ex)
         {
@@ -128,6 +132,7 @@ public partial class MainWindowViewModel : ViewModelBase
             Document.FilePath = path;
             TourYamlSerializer.Save(Document, path);
             IsDirty = false;
+            AppLog.Info($"Saved: {Path.GetFileName(path)}");
         }
         catch (Exception ex)
         {
@@ -193,6 +198,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
     private async Task ShowError(string title, string message)
     {
+        AppLog.Error($"{title}: {message}");
         if (ShowErrorDelegate != null)
             await ShowErrorDelegate(title, message);
     }

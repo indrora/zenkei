@@ -1,4 +1,5 @@
-using System.Collections.ObjectModel;
+using System.Collections.Generic;
+using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Dock.Model.Mvvm.Controls;
 using Zenkei.Models;
@@ -7,7 +8,8 @@ using Zenkei.Models.Markers;
 namespace Zenkei.ViewModels;
 
 /// <summary>
-/// Right dock tool: edits the currently selected marker.
+/// Right dock tool: type-switcher + coords form on top, PropertyGrid for
+/// type-specific marker fields below.
 /// </summary>
 public partial class MarkerEditorViewModel : Tool
 {
@@ -15,42 +17,15 @@ public partial class MarkerEditorViewModel : Tool
     private MarkerBase? _marker;
     private Scene? _scene;
     private TourDocument? _doc;
-
-    // True while SetMarker is syncing the form to the selected marker, so the
-    // field write-back handlers (esp. OnMarkerTypeChanged, which rebuilds the
-    // marker) don't fire in response to programmatic updates.
     private bool _syncing;
 
-    // ── Panel visibility (only one type group shown at a time) ────────────────
-
-    [ObservableProperty] private bool _isLink;
-    [ObservableProperty] private bool _isInfo;
-    [ObservableProperty] private bool _isScene;
     [ObservableProperty] private bool _hasMarker;
-
-    // ── Common fields ─────────────────────────────────────────────────────────
-
     [ObservableProperty] private string _markerType = "info";
     [ObservableProperty] private double _coordsX;
     [ObservableProperty] private double _coordsY;
-    [ObservableProperty] private string? _selectedIconName;
-    [ObservableProperty] private ObservableCollection<string> _availableIcons = [];
 
-    // ── Link fields ───────────────────────────────────────────────────────────
-
-    [ObservableProperty] private string _linkUrl = "";
-
-    // ── Info fields ───────────────────────────────────────────────────────────
-
-    [ObservableProperty] private string _infoText = "";
-
-    // ── Scene link fields ─────────────────────────────────────────────────────
-
-    [ObservableProperty] private string? _targetSceneId;
-    [ObservableProperty] private string _sceneText = "";
-    [ObservableProperty] private ObservableCollection<string> _availableScenes = [];
-
-    // ── Marker types list ─────────────────────────────────────────────────────
+    // What the PropertyGrid binds to — updated when marker or type changes
+    [ObservableProperty] private MarkerBase? _currentMarker;
 
     public IReadOnlyList<string> MarkerTypes { get; } = ["link", "info", "scene"];
 
@@ -67,95 +42,56 @@ public partial class MarkerEditorViewModel : Tool
     /// <summary>Called by PanoramaEditorViewModel when selection changes.</summary>
     public void SetMarker(MarkerBase? marker, Scene? scene, TourDocument? doc)
     {
+        if (_marker != null)
+            _marker.PropertyChanged -= OnMarkerPropertyChanged;
+
         _marker = marker;
         _scene = scene;
         _doc = doc;
         HasMarker = marker != null;
+        CurrentMarker = marker;
 
         if (marker == null) return;
+
+        marker.PropertyChanged += OnMarkerPropertyChanged;
 
         _syncing = true;
         try
         {
-            // Update available scenes list
-            if (doc != null)
-            {
-                AvailableScenes = new ObservableCollection<string>(doc.Scenes.Keys);
-                // Rebuild available icons
-                var icons = new List<string> { "link", "info", "scene" };
-                icons.AddRange(doc.Icons.Keys);
-                AvailableIcons = new ObservableCollection<string>(icons);
-            }
-
             CoordsX = marker.Coords?[0] ?? 0;
             CoordsY = marker.Coords?[1] ?? Math.PI / 2;
-            SelectedIconName = marker.Marker;
             MarkerType = marker.Type;
-
-            IsLink = marker is LinkMarker;
-            IsInfo = marker is InfoMarker;
-            IsScene = marker is SceneMarker;
-
-            if (marker is LinkMarker lm) LinkUrl = lm.Url;
-            if (marker is InfoMarker im) InfoText = im.Text;
-            if (marker is SceneMarker sm)
-            {
-                TargetSceneId = sm.TargetScene;
-                SceneText = sm.Text ?? "";
-            }
         }
-        finally
-        {
-            _syncing = false;
-        }
+        finally { _syncing = false; }
     }
 
-    // ── Write-back when user edits fields ─────────────────────────────────────
+    private void OnMarkerPropertyChanged(object? sender, PropertyChangedEventArgs e)
+        => _main.MarkDirty();
+
+    // ── Coords write-back (Coords[] is [Browsable(false)], kept as manual fields) ──
 
     partial void OnCoordsXChanged(double value)
     {
         if (_syncing) return;
-        if (_marker?.Coords is { Length: >= 2 }) { _marker.Coords[0] = value; Dirty(); }
+        if (_marker?.Coords is { Length: >= 2 }) { _marker.Coords[0] = value; _main.MarkDirty(); }
     }
+
     partial void OnCoordsYChanged(double value)
     {
         if (_syncing) return;
-        if (_marker?.Coords is { Length: >= 2 }) { _marker.Coords[1] = value; Dirty(); }
+        if (_marker?.Coords is { Length: >= 2 }) { _marker.Coords[1] = value; _main.MarkDirty(); }
     }
-    partial void OnSelectedIconNameChanged(string? value)
-    {
-        if (_syncing) return;
-        if (_marker != null) { _marker.Marker = value; Dirty(); }
-    }
-    partial void OnLinkUrlChanged(string value)
-    {
-        if (_syncing) return;
-        if (_marker is LinkMarker lm) { lm.Url = value; Dirty(); }
-    }
-    partial void OnInfoTextChanged(string value)
-    {
-        if (_syncing) return;
-        if (_marker is InfoMarker im) { im.Text = value; Dirty(); }
-    }
-    partial void OnTargetSceneIdChanged(string? value)
-    {
-        if (_syncing) return;
-        if (_marker is SceneMarker sm) { sm.TargetScene = value ?? ""; Dirty(); }
-    }
-    partial void OnSceneTextChanged(string value)
-    {
-        if (_syncing) return;
-        if (_marker is SceneMarker sm) { sm.Text = string.IsNullOrEmpty(value) ? null : value; Dirty(); }
-    }
+
+    // ── Type switching — replaces the marker object in the scene ──────────────
 
     partial void OnMarkerTypeChanged(string value)
     {
-        // Type change replaces the marker in the scene — but only when the user
-        // picks a new type, not while SetMarker is syncing the form to selection.
         if (_syncing) return;
         if (_scene == null || _marker == null) return;
         var idx = _scene.Markers.IndexOf(_marker);
         if (idx < 0) return;
+
+        _marker.PropertyChanged -= OnMarkerPropertyChanged;
 
         var coords = _marker.Coords;
         var iconName = _marker.Marker;
@@ -170,8 +106,6 @@ public partial class MarkerEditorViewModel : Tool
         newMarker.Marker = iconName;
         _scene.Markers[idx] = newMarker;
         SetMarker(newMarker, _scene, _doc);
-        Dirty();
+        _main.MarkDirty();
     }
-
-    private void Dirty() => _main.MarkDirty();
 }

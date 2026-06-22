@@ -1,9 +1,16 @@
+using System.ComponentModel;
+
 namespace Zenkei.Models.Markers;
 
 public class SceneMarker : MarkerBase
 {
     public override string Type => "scene";
-    // Key of the target scene in TourDocument.Scenes
-    public string TargetScene { get; set; } = "";
-    public string? Text { get; set; }
+
+    private string _targetScene = "";
+    [Category("Scene Link"), Description("ID of the target scene to navigate to")]
+    public string TargetScene { get => _targetScene; set { _targetScene = value; OnPropertyChanged(); } }
+
+    private string? _text;
+    [Category("Scene Link"), Description("Optional transition label shown on the marker")]
+    public string? Text { get => _text; set { _text = value; OnPropertyChanged(); } }
 }

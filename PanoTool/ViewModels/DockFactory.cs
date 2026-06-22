@@ -6,25 +6,34 @@ using Dock.Model.Mvvm.Controls;
 namespace Zenkei.ViewModels;
 
 /// <summary>
-/// Builds the three-pane IDE-style dock layout:
-///   Left (Scenes) | Center (Document tabs) | Right (Marker editor)
+/// Builds the IDE-style dock layout:
+///   ┌──────────────────────────────────────┐
+///   │  Left (Scenes) | Center | Right (Mk) │
+///   ├──────────────────────────────────────┤
+///   │           Output (bottom)            │
+///   └──────────────────────────────────────┘
 /// </summary>
 public class DockFactory : Factory
 {
     private readonly ScenePanelViewModel _scenePanel;
     private readonly MarkerEditorViewModel _markerEditor;
+    private readonly OutputViewModel _outputPanel;
 
     private Dock.Model.Controls.IDocumentDock? _documentDock;
 
-    public DockFactory(ScenePanelViewModel scenePanel, MarkerEditorViewModel markerEditor)
+    public DockFactory(
+        ScenePanelViewModel scenePanel,
+        MarkerEditorViewModel markerEditor,
+        OutputViewModel outputPanel)
     {
         _scenePanel = scenePanel;
         _markerEditor = markerEditor;
+        _outputPanel = outputPanel;
     }
 
     public override IRootDock CreateLayout()
     {
-        // Left tool pane — scene browser + scene metadata form
+        // Left tool pane — scene browser
         var leftDock = CreateToolDock();
         leftDock.Id = "LeftDock";
         leftDock.Title = "Left";
@@ -41,7 +50,7 @@ public class DockFactory : Factory
         docDock.VisibleDockables = CreateList<IDockable>();
         _documentDock = docDock;
 
-        // Right tool pane — marker property editor
+        // Right tool pane — marker editor
         var rightDock = CreateToolDock();
         rightDock.Id = "RightDock";
         rightDock.Title = "Right";
@@ -49,6 +58,15 @@ public class DockFactory : Factory
         rightDock.Proportion = 0.22;
         rightDock.VisibleDockables = CreateList<IDockable>(_markerEditor);
         rightDock.ActiveDockable = _markerEditor;
+
+        // Bottom tool pane — output log
+        var bottomDock = CreateToolDock();
+        bottomDock.Id = "BottomDock";
+        bottomDock.Title = "Output";
+        bottomDock.Alignment = Alignment.Bottom;
+        bottomDock.Proportion = 0.22;
+        bottomDock.VisibleDockables = CreateList<IDockable>(_outputPanel);
+        bottomDock.ActiveDockable = _outputPanel;
 
         // Horizontal split: Left | Center | Right
         var mainLayout = CreateProportionalDock();
@@ -62,12 +80,22 @@ public class DockFactory : Factory
             CreateProportionalDockSplitter(),
             rightDock);
 
+        // Vertical split: main layout on top, output at bottom
+        var verticalLayout = CreateProportionalDock();
+        verticalLayout.Id = "VerticalLayout";
+        verticalLayout.Title = "Vertical";
+        verticalLayout.Orientation = Orientation.Vertical;
+        verticalLayout.VisibleDockables = CreateList<IDockable>(
+            mainLayout,
+            CreateProportionalDockSplitter(),
+            bottomDock);
+
         var root = CreateRootDock();
         root.Id = "Root";
         root.Title = "Root";
-        root.VisibleDockables = CreateList<IDockable>(mainLayout);
-        root.DefaultDockable = mainLayout;
-        root.ActiveDockable = mainLayout;
+        root.VisibleDockables = CreateList<IDockable>(verticalLayout);
+        root.DefaultDockable = verticalLayout;
+        root.ActiveDockable = verticalLayout;
         return root;
     }
 

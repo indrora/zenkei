@@ -18,7 +18,7 @@ namespace Zenkei.Serialization;
 /// </summary>
 public static class PannellumExporter
 {
-    public static void Export(TourDocument doc, string outputDir, string? tourBaseDir = null)
+    public static void Export(TourDocument doc, string outputDir, string? tourBaseDir = null, Action<string>? log = null)
     {
         Directory.CreateDirectory(outputDir);
         Directory.CreateDirectory(Path.Combine(outputDir, "images"));
@@ -45,11 +45,12 @@ public static class PannellumExporter
             var srcImage = Path.IsPathRooted(scene.Image)
                 ? scene.Image
                 : Path.Combine(baseDir, scene.Image);
-            if (!File.Exists(srcImage)) continue;
+            if (!File.Exists(srcImage)) { log?.Invoke($"Warning: image not found for scene '{id}': {srcImage}"); continue; }
             var ext = Path.GetExtension(srcImage).ToLowerInvariant();
             var destName = $"{id}{ext}";
             File.Copy(srcImage, Path.Combine(outputDir, "images", destName), overwrite: true);
             imageMap[id] = $"images/{destName}";
+            log?.Invoke($"Copied image: {destName}");
         }
 
         // Copy user icons
@@ -57,20 +58,23 @@ public static class PannellumExporter
         foreach (var (name, path) in doc.Icons)
         {
             var srcIcon = Path.IsPathRooted(path) ? path : Path.Combine(baseDir, path);
-            if (!File.Exists(srcIcon)) continue;
+            if (!File.Exists(srcIcon)) { log?.Invoke($"Warning: icon not found '{name}': {srcIcon}"); continue; }
             var destName = Path.GetFileName(srcIcon);
             File.Copy(srcIcon, Path.Combine(outputDir, "icons", destName), overwrite: true);
             iconCssClass[name] = $"hs-icon-{name}";
+            log?.Invoke($"Copied icon: {destName}");
         }
 
         // Build tour.json
         var tourJson = BuildTourJson(doc, imageMap, iconCssClass);
         File.WriteAllText(Path.Combine(outputDir, "tour.json"), tourJson, Encoding.UTF8);
+        log?.Invoke("Wrote tour.json");
 
         // Build index.html
         var iconCss = BuildIconCss(doc.Icons, iconCssClass);
         var html = BuildHtml(iconCss);
         File.WriteAllText(Path.Combine(outputDir, "index.html"), html, Encoding.UTF8);
+        log?.Invoke("Wrote index.html");
     }
 
     private static string BuildTourJson(

@@ -2,13 +2,14 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:Zenkei.ViewModels"
              xmlns:models="using:Zenkei.Models"
+             xmlns:pg="using:Avalonia.PropertyGrid.Controls"
              x:Class="Zenkei.Views.ScenePanelView"
              x:DataType="vm:ScenePanelViewModel">
 
-  <DockPanel>
+  <Grid RowDefinitions="Auto,*,Auto,*">
 
-    <!-- Header row: label + buttons -->
-    <Border DockPanel.Dock="Top"
+    <!-- Row 0: Header -->
+    <Border Grid.Row="0"
             BorderBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}"
             BorderThickness="0,0,0,1" Padding="6,4">
       <DockPanel>
@@ -24,48 +25,9 @@
       </DockPanel>
     </Border>
 
-    <!-- Scene metadata form (shown when a scene is selected) -->
-    <ScrollViewer DockPanel.Dock="Bottom" MaxHeight="280">
-      <StackPanel Margin="8,4" Spacing="4"
-                  IsVisible="{Binding HasSelectedScene}">
-
-        <Separator/>
-        <TextBlock Text="Scene Info" FontWeight="SemiBold" FontSize="12"/>
-
-        <TextBlock Text="Title" Classes="FormLabel"/>
-        <TextBox Text="{Binding SceneTitle}" PlaceholderText="Scene title"/>
-
-        <TextBlock Text="Description" Classes="FormLabel"/>
-        <TextBox Text="{Binding SceneDescription}"
-                 AcceptsReturn="True" Height="52"
-                 PlaceholderText="Optional description"/>
-
-        <TextBlock Text="Image" Classes="FormLabel"/>
-        <TextBox Text="{Binding SceneImage}" IsReadOnly="True"
-                 FontSize="10" Opacity="0.7"/>
-
-        <TextBlock Text="HFOV" Classes="FormLabel"/>
-        <NumericUpDown Value="{Binding SceneHFov}"
-                       Minimum="20" Maximum="180"
-                       FormatString="F0" Increment="5"/>
-
-        <TextBlock Text="Initial view (yaw / pitch in radians)" Classes="FormLabel"/>
-        <Grid ColumnDefinitions="*,6,*">
-          <NumericUpDown Grid.Column="0" Value="{Binding SceneInitialX}"
-                         Minimum="-3.1416" Maximum="3.1416"
-                         FormatString="F4" Increment="0.05"
-                         ToolTip.Tip="Yaw (-π … π)"/>
-          <NumericUpDown Grid.Column="2" Value="{Binding SceneInitialY}"
-                         Minimum="0" Maximum="3.1416"
-                         FormatString="F4" Increment="0.05"
-                         ToolTip.Tip="Pitch (0=top, π=bottom)"/>
-        </Grid>
-
-      </StackPanel>
-    </ScrollViewer>
-
-    <!-- Scene list -->
-    <ListBox ItemsSource="{Binding Scenes}"
+    <!-- Row 1: Scene list -->
+    <ListBox Grid.Row="1"
+             ItemsSource="{Binding Scenes}"
              SelectedItem="{Binding SelectedScene}">
       <ListBox.ItemTemplate>
         <DataTemplate DataType="models:Scene">
@@ -74,5 +36,27 @@
       </ListBox.ItemTemplate>
     </ListBox>
 
-  </DockPanel>
+    <!-- Row 2: Initial view (array — not shown in PropertyGrid) -->
+    <StackPanel Grid.Row="2"
+                Margin="8,6,8,4" Spacing="4"
+                IsVisible="{Binding HasSelectedScene}">
+      <Separator/>
+      <TextBlock Text="Initial view (yaw / pitch rad)" Classes="FormLabel"/>
+      <Grid ColumnDefinitions="*,6,*">
+        <NumericUpDown Grid.Column="0" Value="{Binding SceneInitialX}"
+                       Minimum="-3.1416" Maximum="3.1416"
+                       FormatString="F4" Increment="0.05"
+                       ToolTip.Tip="Yaw (-π … π)"/>
+        <NumericUpDown Grid.Column="2" Value="{Binding SceneInitialY}"
+                       Minimum="0" Maximum="3.1416"
+                       FormatString="F4" Increment="0.05"
+                       ToolTip.Tip="Pitch (0=top, π=bottom)"/>
+      </Grid>
+    </StackPanel>
+
+    <!-- Row 3: PropertyGrid for Title, Description, Image, HFov -->
+    <pg:PropertyGrid Grid.Row="3"
+                     DataContext="{Binding SelectedScene}"/>
+
+  </Grid>
 </UserControl>

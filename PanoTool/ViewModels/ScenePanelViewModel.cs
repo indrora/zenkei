@@ -1,18 +1,20 @@
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Dock.Model.Mvvm.Controls;
 using Zenkei.Models;
-using Zenkei.Models.Markers;
 
 namespace Zenkei.ViewModels;
 
 /// <summary>
-/// Left dock tool: scene list + scene metadata form.
+/// Left dock tool: scene list + initial-view form + PropertyGrid for scene metadata.
 /// </summary>
 public partial class ScenePanelViewModel : Tool
 {
     private readonly MainWindowViewModel _main;
+    private Scene? _subscribedScene;
+    private bool _syncingScene;
 
     public ObservableCollection<Scene> Scenes { get; } = [];
 
@@ -23,12 +25,7 @@ public partial class ScenePanelViewModel : Tool
 
     public bool HasSelectedScene => SelectedScene != null;
 
-    // ── Scene metadata fields (bound to form) ────────────────────────────────
-
-    [ObservableProperty] private string _sceneTitle = "";
-    [ObservableProperty] private string _sceneDescription = "";
-    [ObservableProperty] private string _sceneImage = "";
-    [ObservableProperty] private double _sceneHFov = 120;
+    // Initial view is a double[] so we keep manual NumericUpDown fields for it
     [ObservableProperty] private double _sceneInitialX;
     [ObservableProperty] private double _sceneInitialY;
 
@@ -46,54 +43,45 @@ public partial class ScenePanelViewModel : Tool
 
     partial void OnSelectedSceneChanged(Scene? value)
     {
+        if (_subscribedScene != null)
+            _subscribedScene.PropertyChanged -= OnScenePropertyChanged;
+        _subscribedScene = value;
+
         if (value == null) return;
-        // Sync metadata form
-        SceneTitle = value.Title;
-        SceneDescription = value.Description ?? "";
-        SceneImage = value.Image;
-        SceneHFov = value.HFov ?? _main.Document.Default.HFov;
-        SceneInitialX = value.Initial[0];
-        SceneInitialY = value.Initial[1];
-        // Open editor tab
+
+        value.PropertyChanged += OnScenePropertyChanged;
+
+        // Sync Initial fields — guard against dirtying on programmatic update
+        _syncingScene = true;
+        try
+        {
+            SceneInitialX = value.Initial[0];
+            SceneInitialY = value.Initial[1];
+        }
+        finally { _syncingScene = false; }
+
         _main.OpenScene(value);
     }
 
-    // ── Scene metadata write-back ─────────────────────────────────────────────
-
-    partial void OnSceneTitleChanged(string value)
+    private void OnScenePropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (_selectedScene == null) return;
-        _selectedScene.Title = value;
-        _main.DockFactory?.OpenDocument(
-            _main.GetOrCreateEditor(_selectedScene)); // refresh tab title
-        _main.GetOrCreateEditor(_selectedScene).RefreshTitle();
         _main.MarkDirty();
+        if (e.PropertyName == nameof(Scene.Title) && SelectedScene != null)
+            _main.GetOrCreateEditor(SelectedScene).RefreshTitle();
     }
 
-    partial void OnSceneDescriptionChanged(string value)
-    {
-        if (_selectedScene == null) return;
-        _selectedScene.Description = string.IsNullOrEmpty(value) ? null : value;
-        _main.MarkDirty();
-    }
-
-    partial void OnSceneHFovChanged(double value)
-    {
-        if (_selectedScene == null) return;
-        _selectedScene.HFov = value;
-        _main.MarkDirty();
-    }
+    // ── Initial view write-back ───────────────────────────────────────────────
 
     partial void OnSceneInitialXChanged(double value)
     {
-        if (_selectedScene == null) return;
+        if (_syncingScene || _selectedScene == null) return;
         _selectedScene.Initial[0] = value;
         _main.MarkDirty();
     }
 
     partial void OnSceneInitialYChanged(double value)
     {
-        if (_selectedScene == null) return;
+        if (_syncingScene || _selectedScene == null) return;
         _selectedScene.Initial[1] = value;
         _main.MarkDirty();
     }
@@ -121,6 +109,13 @@ public partial class ScenePanelViewModel : Tool
     private void RemoveScene()
     {
         if (SelectedScene == null) return;
+
+        if (_subscribedScene == SelectedScene)
+        {
+            SelectedScene.PropertyChanged -= OnScenePropertyChanged;
+            _subscribedScene = null;
+        }
+
         var id = SelectedScene.Id;
         _main.Document.Scenes.Remove(id);
         Scenes.Remove(SelectedScene);
@@ -131,11 +126,14 @@ public partial class ScenePanelViewModel : Tool
 
     // ── Population ────────────────────────────────────────────────────────────
 
-    /// <summary>
-    /// Replaces the scene list from the loaded document.
-    /// </summary>
     public void LoadFromDocument(TourDocument doc)
     {
+        if (_subscribedScene != null)
+        {
+            _subscribedScene.PropertyChanged -= OnScenePropertyChanged;
+            _subscribedScene = null;
+        }
+
         Scenes.Clear();
         foreach (var scene in doc.Scenes.Values)
             Scenes.Add(scene);
@@ -147,20 +145,11 @@ public partial class ScenePanelViewModel : Tool
     internal static Scene CreateSceneFromImagePath(string imagePath)
     {
         var raw = Path.GetFileNameWithoutExtension(imagePath);
-        // Sanitise: replace non-alphanumeric with _
         var id = new string(raw.Select(c => char.IsLetterOrDigit(c) ? c : '_').ToArray());
         if (string.IsNullOrEmpty(id)) id = "Scene";
-        return new Scene
-        {
-            Id = id,
-            Image = imagePath,
-            Title = id
-        };
+        return new Scene { Id = id, Image = imagePath, Title = id };
     }
 
-    /// <summary>
-    /// Ensures scene IDs are unique within a document by appending _2, _3, etc.
-    /// </summary>
     public static string UniqueId(string baseId, ICollection<string> existingIds)
     {
         if (!existingIds.Contains(baseId)) return baseId;
