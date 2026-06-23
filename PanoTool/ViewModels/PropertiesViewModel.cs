@@ -90,13 +90,25 @@ public partial class PropertiesViewModel : Tool
     }
 
     /// <summary>
-    /// Called during canvas initial-view drag.  Scene.Initial[] is already updated
-    /// by PanoramaEditorViewModel; this tells the PropertyGrid subject to refresh.
+    /// Called on every frame of a canvas initial-view drag.
+    /// On the first call, switches the Properties panel to show the initial POV subject.
+    /// On subsequent calls (same scene), just refreshes the Position cell.
+    /// Scene.Initial[] is already updated by the canvas before this is called.
     /// </summary>
     public void SyncInitialView(double yaw, double pitch)
     {
-        if (Subject is InitialViewSubject ivs)
+        if (Subject is InitialViewSubject ivs && ivs.Scene == _scene)
+        {
+            // Already showing this scene's initial POV — refresh the position cell.
             ivs.NotifyPositionChanged();
+        }
+        else if (_scene != null)
+        {
+            // First drag event (or Properties was showing something else).
+            // Switch to InitialViewSubject; the grid rebuild reads Scene.Initial[]
+            // which the canvas already updated, so the cell shows the right value.
+            SetInitialPov(_scene);
+        }
     }
 
     /// <summary>
