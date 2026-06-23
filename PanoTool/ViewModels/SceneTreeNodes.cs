@@ -83,7 +83,8 @@ public sealed class SceneItemNode : SceneTreeNode
         Scene  = scene;
         _label = scene.Id;
 
-        // Child 0 is always the image node
+        // Child 0: initial POV, Child 1: image file, then markers
+        Children.Add(new InitialPovNode(scene));
         Children.Add(new ImageFileNode(scene));
 
         scene.PropertyChanged           += OnScenePropertyChanged;
@@ -133,6 +134,22 @@ public sealed class SceneItemNode : SceneTreeNode
                 break;
         }
     }
+}
+
+// ── Initial POV synthetic node ─────────────────────────────────────────────────
+
+/// <summary>
+/// Synthetic leaf representing the scene's initial viewpoint.
+/// Selecting it shows the scene properties (including initial-view NUDs).
+/// Not serialised as a YAML marker.
+/// </summary>
+public sealed class InitialPovNode : SceneTreeNode
+{
+    private readonly Scene _scene;
+    public override string Icon  => "◎";
+    public override string Label => "Initial POV";
+    public override Scene? RelatedScene => _scene;
+    public InitialPovNode(Scene scene) => _scene = scene;
 }
 
 // ── Image file item ────────────────────────────────────────────────────────────
