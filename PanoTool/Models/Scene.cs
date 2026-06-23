@@ -2,7 +2,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using Zenkei.Models.Markers;
-using Zenkei.PropertyGrid;
+using Zenkei.PropertyGrid; // [Degrees], [Multiline]
 
 namespace Zenkei.Models;
 
@@ -32,6 +32,7 @@ public class Scene : INotifyPropertyChanged
     public string Title { get => _title; set { _title = value; OnPropertyChanged(); } }
 
     private string? _description;
+    [Multiline]
     [Category("Scene"), Description("Optional description text")]
     public string? Description { get => _description; set { _description = value; OnPropertyChanged(); } }
 

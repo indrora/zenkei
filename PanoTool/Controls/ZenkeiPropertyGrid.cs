@@ -26,6 +26,7 @@ public class ZenkeiPropertyGrid : PGControl
         // DegreeCellFactory (priority 1000) so it wins for YawPitch properties.
         Factories.AddFactory(new YawPitchCellFactory());
         Factories.AddFactory(new DegreeCellFactory());
+        Factories.AddFactory(new MultilineTextCellFactory());
         // SceneIdCellFactory reads SceneNames lazily via the lambda so it always sees the current list.
         Factories.AddFactory(new SceneIdCellFactory(() => SceneNames));
     }
