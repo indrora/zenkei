@@ -2,9 +2,9 @@ using Avalonia.Controls;
 
 namespace Zenkei.Views;
 
-public partial class ScenePanelView : UserControl
+public partial class SceneListView : UserControl
 {
-    public ScenePanelView()
+    public SceneListView()
     {
         InitializeComponent();
     }

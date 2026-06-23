@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using Zenkei.Models.Markers;
+using Zenkei.PropertyGrid;
 
 namespace Zenkei.Models;
 
@@ -46,6 +47,7 @@ public class Scene : INotifyPropertyChanged
     public double[] Initial { get; set; } = [0.0, Math.PI / 2];
 
     private double? _hFov;
+    [Degrees]
     [Category("View"), Description("Horizontal field of view in degrees (overrides tour default)")]
     public double? HFov { get => _hFov; set { _hFov = value; OnPropertyChanged(); } }
 
