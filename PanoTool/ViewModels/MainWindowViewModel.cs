@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Dock.Model.Controls;
 using Zenkei.Models;
+using Zenkei.Models.Markers;
 using Zenkei.Serialization;
 using Zenkei.Services;
 
@@ -174,6 +175,54 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     public void MarkDirty() => IsDirty = true;
+
+    // ── Scene rename ──────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Renames a scene's internal ID.
+    /// Returns null on success; an error message on failure (bad chars, duplicate, empty).
+    /// Updates: Scenes dict key, Scene.Id, all SceneMarker cross-references, and the
+    /// open editor tab (Title, Id, SceneId) so the tab label refreshes immediately.
+    /// </summary>
+    public string? TryRenameScene(Scene scene, string newId)
+    {
+        newId = newId.Trim();
+        if (string.IsNullOrEmpty(newId))
+            return "ID cannot be empty.";
+
+        if (!newId.All(c => char.IsLetterOrDigit(c) || c == '_'))
+            return "ID may only contain letters, digits, and underscores.";
+
+        if (newId == scene.Id) return null; // nothing to do
+
+        if (Document.Scenes.ContainsKey(newId))
+            return $"A scene with ID '{newId}' already exists.";
+
+        var oldId = scene.Id;
+
+        Document.Scenes.Remove(oldId);
+        scene.Id = newId;
+        Document.Scenes[newId] = scene;
+
+        // Update all scene-link markers that point to the old ID.
+        foreach (var s in Document.Scenes.Values)
+            foreach (var m in s.Markers.OfType<SceneMarker>())
+                if (m.TargetScene == oldId)
+                    m.TargetScene = newId;
+
+        // Update the open editor tab without requiring a re-open.
+        if (_editors.TryGetValue(oldId, out var editor))
+        {
+            _editors.Remove(oldId);
+            editor.SceneId = newId;
+            editor.Title = newId;
+            editor.Id = $"PanoEditor_{newId}";
+            _editors[newId] = editor;
+        }
+
+        MarkDirty();
+        return null;
+    }
 
     // ── Image path safety ─────────────────────────────────────────────────────
 

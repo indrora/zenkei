@@ -18,12 +18,16 @@ public partial class ScenePropertiesViewModel : Tool
     /// <summary>The scene bound to the PropertyGrid.</summary>
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(ChangeImageCommand))]
+    [NotifyCanExecuteChangedFor(nameof(RenameSceneCommand))]
     private Scene? _selectedScene;
 
     // Initial view is a double[] so we keep manual fields rather than exposing
     // the array directly to the PropertyGrid.
     [ObservableProperty] private double _sceneInitialX;
     [ObservableProperty] private double _sceneInitialY;
+
+    /// <summary>Editable copy of the scene ID shown in the rename TextBox.</summary>
+    [ObservableProperty] private string _editingSceneId = "";
 
     public bool HasSelectedScene => SelectedScene != null;
 
@@ -47,7 +51,14 @@ public partial class ScenePropertiesViewModel : Tool
         SelectedScene = scene;
         OnPropertyChanged(nameof(HasSelectedScene));
         if (scene != null)
+        {
             SyncInitialView(scene.Initial[0], scene.Initial[1]);
+            EditingSceneId = scene.Id;
+        }
+        else
+        {
+            EditingSceneId = "";
+        }
     }
 
     /// <summary>
@@ -60,6 +71,22 @@ public partial class ScenePropertiesViewModel : Tool
         _syncingScene = true;
         try { SceneInitialX = yaw; SceneInitialY = pitch; }
         finally { _syncingScene = false; }
+    }
+
+    // ── Rename scene ID ───────────────────────────────────────────────────────
+
+    [RelayCommand(CanExecute = nameof(HasSelectedScene))]
+    private async Task RenameSceneAsync()
+    {
+        if (SelectedScene == null) return;
+
+        var error = _main.TryRenameScene(SelectedScene, EditingSceneId);
+        if (error != null)
+        {
+            EditingSceneId = SelectedScene.Id; // revert to current ID
+            await _main.ShowErrorAsync("Rename failed", error);
+        }
+        // On success EditingSceneId already matches the new scene.Id
     }
 
     // ── Change image ──────────────────────────────────────────────────────────

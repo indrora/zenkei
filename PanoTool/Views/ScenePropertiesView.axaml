@@ -11,6 +11,19 @@
     <StackPanel DockPanel.Dock="Top"
                 Margin="8,6,8,4" Spacing="4"
                 IsVisible="{Binding HasSelectedScene}">
+      <!-- Scene ID rename -->
+      <TextBlock Text="Scene ID" Classes="FormLabel"/>
+      <Grid ColumnDefinitions="*,Auto">
+        <TextBox Grid.Column="0"
+                 Text="{Binding EditingSceneId}"
+                 PlaceholderText="scene_id"
+                 FontFamily="Cascadia Code,Consolas,monospace"
+                 ToolTip.Tip="Internal key used in the YAML file and scene-link markers"/>
+        <Button Grid.Column="1" Content="Rename" Margin="4,0,0,0"
+                Command="{Binding RenameSceneCommand}"
+                ToolTip.Tip="Apply new ID and update all scene-link marker references"/>
+      </Grid>
+
       <Button Command="{Binding ChangeImageCommand}"
               HorizontalAlignment="Stretch" Padding="8,3"
               ToolTip.Tip="Replace the panorama image for this scene">
