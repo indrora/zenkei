@@ -100,12 +100,19 @@ public class DockFactory : Factory
     }
 
     /// <summary>
-    /// Prevents tool panes from being dragged into the center document area.
+    /// Prevents tool panes from being dragged into the center document area,
+    /// and prevents Explorer and Properties from tab-merging (they share a ViewLocator
+    /// DataTemplate discriminator and render the wrong view when in the same tab strip).
     /// </summary>
     public override void MoveDockable(IDock sourceDock, IDock targetDock, IDockable sourceDockable, IDockable? targetDockable)
     {
         if (targetDock is IDocumentDock && sourceDockable is not IDocument)
             return;
+
+        if ((sourceDockable == _sceneList && targetDock.VisibleDockables?.Contains(_properties) == true) ||
+            (sourceDockable == _properties && targetDock.VisibleDockables?.Contains(_sceneList) == true))
+            return;
+
         base.MoveDockable(sourceDock, targetDock, sourceDockable, targetDockable);
     }
 
