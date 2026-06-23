@@ -19,7 +19,8 @@ public partial class MainWindowViewModel : ViewModelBase
 
     // ── Sub-panels ────────────────────────────────────────────────────────────
 
-    public ScenePanelViewModel ScenePanel { get; private set; }
+    public SceneListViewModel SceneList { get; private set; }
+    public ScenePropertiesViewModel SceneProperties { get; private set; }
     public MarkerEditorViewModel MarkerEditor { get; private set; }
 
     // ── Document state ────────────────────────────────────────────────────────
@@ -47,10 +48,11 @@ public partial class MainWindowViewModel : ViewModelBase
 
     public MainWindowViewModel()
     {
-        ScenePanel = new ScenePanelViewModel(this);
+        SceneList = new SceneListViewModel(this);
+        SceneProperties = new ScenePropertiesViewModel(this, SceneList);
         MarkerEditor = new MarkerEditorViewModel(this);
 
-        DockFactory = new DockFactory(ScenePanel, MarkerEditor, new OutputViewModel());
+        DockFactory = new DockFactory(SceneList, SceneProperties, MarkerEditor, new OutputViewModel());
         Layout = DockFactory.CreateLayout();
         DockFactory.InitLayout(Layout);
     }
@@ -63,7 +65,7 @@ public partial class MainWindowViewModel : ViewModelBase
         _editors.Clear();
         Document = new TourDocument();
         IsDirty = false;
-        ScenePanel.LoadFromDocument(Document);
+        SceneList.LoadFromDocument(Document);
     }
 
     [RelayCommand]
@@ -78,7 +80,7 @@ public partial class MainWindowViewModel : ViewModelBase
             _editors.Clear();
             Document = doc;
             IsDirty = false;
-            ScenePanel.LoadFromDocument(doc);
+            SceneList.LoadFromDocument(doc);
             AppLog.Info($"Opened: {Path.GetFileName(path)}");
         }
         catch (Exception ex)
@@ -150,7 +152,7 @@ public partial class MainWindowViewModel : ViewModelBase
             _editors.Clear();
             Document = doc;
             IsDirty = false;
-            ScenePanel.LoadFromDocument(doc);
+            SceneList.LoadFromDocument(doc);
         }
         catch { /* silently ignore bad files on startup */ }
     }
@@ -172,6 +174,32 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     public void MarkDirty() => IsDirty = true;
+
+    // ── Image path safety ─────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Returns a project-relative path for <paramref name="absoluteImagePath"/>,
+    /// or the original path when the project is unsaved.
+    /// Throws <see cref="ArgumentException"/> when the path escapes the project directory.
+    /// </summary>
+    public string RelativizeImagePath(string absoluteImagePath)
+    {
+        if (Document.FilePath == null) return absoluteImagePath;
+
+        var projectDir = Path.GetDirectoryName(Path.GetFullPath(Document.FilePath))!;
+        var fullImage  = Path.GetFullPath(absoluteImagePath);
+        // Boundary includes the trailing separator so "projectDir_extra" doesn't pass.
+        var boundary   = projectDir.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
+                         + Path.DirectorySeparatorChar;
+
+        if (!fullImage.StartsWith(boundary, StringComparison.OrdinalIgnoreCase))
+            throw new ArgumentException(
+                $"Image must be inside the project folder:\n{projectDir}");
+
+        return Path.GetRelativePath(projectDir, fullImage);
+    }
+
+    public Task ShowErrorAsync(string title, string message) => ShowError(title, message);
 
     // ── File dialog helpers ───────────────────────────────────────────────────
 

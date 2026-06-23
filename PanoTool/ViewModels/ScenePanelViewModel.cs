@@ -8,13 +8,13 @@ using Zenkei.Models;
 namespace Zenkei.ViewModels;
 
 /// <summary>
-/// Left dock tool: scene list + initial-view form + PropertyGrid for scene metadata.
+/// Left dock tool — shows the scene list with add / remove.
+/// Selection changes are observable so ScenePropertiesViewModel can follow them.
 /// </summary>
-public partial class ScenePanelViewModel : Tool
+public partial class SceneListViewModel : Tool
 {
     private readonly MainWindowViewModel _main;
     private Scene? _subscribedScene;
-    private bool _syncingScene;
 
     public ObservableCollection<Scene> Scenes { get; } = [];
 
@@ -25,18 +25,14 @@ public partial class ScenePanelViewModel : Tool
 
     public bool HasSelectedScene => SelectedScene != null;
 
-    // Initial view is a double[] so we keep manual NumericUpDown fields for it
-    [ObservableProperty] private double _sceneInitialX;
-    [ObservableProperty] private double _sceneInitialY;
-
-    public ScenePanelViewModel(MainWindowViewModel main)
+    public SceneListViewModel(MainWindowViewModel main)
     {
         _main = main;
-        Id = "ScenePanel";
+        Id = "SceneList";
         Title = "Scenes";
         CanClose = false;
-        CanPin = false;
-        CanFloat = false;
+        CanPin = true;
+        CanFloat = true;
     }
 
     // ── Selection ─────────────────────────────────────────────────────────────
@@ -48,18 +44,7 @@ public partial class ScenePanelViewModel : Tool
         _subscribedScene = value;
 
         if (value == null) return;
-
         value.PropertyChanged += OnScenePropertyChanged;
-
-        // Sync Initial fields — guard against dirtying on programmatic update
-        _syncingScene = true;
-        try
-        {
-            SceneInitialX = value.Initial[0];
-            SceneInitialY = value.Initial[1];
-        }
-        finally { _syncingScene = false; }
-
         _main.OpenScene(value);
     }
 
@@ -68,22 +53,6 @@ public partial class ScenePanelViewModel : Tool
         _main.MarkDirty();
         if (e.PropertyName == nameof(Scene.Title) && SelectedScene != null)
             _main.GetOrCreateEditor(SelectedScene).RefreshTitle();
-    }
-
-    // ── Initial view write-back ───────────────────────────────────────────────
-
-    partial void OnSceneInitialXChanged(double value)
-    {
-        if (_syncingScene || _selectedScene == null) return;
-        _selectedScene.Initial[0] = value;
-        _main.MarkDirty();
-    }
-
-    partial void OnSceneInitialYChanged(double value)
-    {
-        if (_syncingScene || _selectedScene == null) return;
-        _selectedScene.Initial[1] = value;
-        _main.MarkDirty();
     }
 
     // ── Commands ──────────────────────────────────────────────────────────────
@@ -95,9 +64,22 @@ public partial class ScenePanelViewModel : Tool
             "Select panorama image(s)",
             ["*.jpg", "*.jpeg", "*.png", "*.webp"]);
 
+        var projectBaseDir = _main.Document.FilePath != null
+            ? Path.GetDirectoryName(Path.GetFullPath(_main.Document.FilePath))
+            : null;
+
         foreach (var path in files)
         {
-            var scene = CreateSceneFromImagePath(path);
+            string imagePath;
+            try { imagePath = _main.RelativizeImagePath(path); }
+            catch (ArgumentException ex)
+            {
+                await _main.ShowErrorAsync("Image rejected", ex.Message);
+                continue;
+            }
+
+            var scene = CreateSceneFromImagePath(imagePath);
+            scene.BaseDirectory = projectBaseDir;
             _main.Document.Scenes[scene.Id] = scene;
             Scenes.Add(scene);
             _main.MarkDirty();
