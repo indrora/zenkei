@@ -8,26 +8,25 @@
     <!-- Equirectangular mini-map — drag to place the marker -->
     <controls:MarkerLocationControl x:Name="Map"/>
 
-    <!-- Yaw NUD row -->
-    <StackPanel Orientation="Horizontal" Spacing="4">
-      <TextBlock Text="Yaw" VerticalAlignment="Center"
-                 Opacity="0.65" FontSize="11" Margin="4,0,0,0"/>
-      <NumericUpDown x:Name="YawNud"
+    <!-- Yaw / Pitch NUDs: shared two-column Grid so labels align and both NUDs
+         get identical width filling the remaining space to the right. -->
+    <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,4,Auto">
+      <TextBlock Grid.Row="0" Grid.Column="0"
+                 Text="Yaw" VerticalAlignment="Center"
+                 Opacity="0.65" FontSize="11" Margin="4,0,6,0"/>
+      <NumericUpDown Grid.Row="0" Grid.Column="1" x:Name="YawNud"
                      Minimum="-180" Maximum="180" Increment="1"
-                     FormatString="F0" AllowSpin="True" MinWidth="90"
+                     FormatString="F0" AllowSpin="True"
                      HorizontalAlignment="Stretch"/>
-    </StackPanel>
 
-    <!-- Pitch NUD row -->
-    <StackPanel Orientation="Horizontal" Spacing="4"
-                HorizontalAlignment="Stretch">
-      <TextBlock Text="Pitch" VerticalAlignment="Center"
-                 Opacity="0.65" FontSize="11" Margin="4,0,0,0"/>
-      <NumericUpDown x:Name="PitchNud"
+      <TextBlock Grid.Row="2" Grid.Column="0"
+                 Text="Pitch" VerticalAlignment="Center"
+                 Opacity="0.65" FontSize="11" Margin="4,0,6,0"/>
+      <NumericUpDown Grid.Row="2" Grid.Column="1" x:Name="PitchNud"
                      Minimum="0" Maximum="180" Increment="1"
-                     FormatString="F0" AllowSpin="True" MinWidth="90"
+                     FormatString="F0" AllowSpin="True"
                      HorizontalAlignment="Stretch"/>
-    </StackPanel>
+    </Grid>
 
   </StackPanel>
 </UserControl>
