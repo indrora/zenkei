@@ -6,6 +6,7 @@ using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Zenkei.Models;
 using Zenkei.Models.Markers;
+using Zenkei.ViewModels;
 
 namespace Zenkei.Controls;
 
@@ -13,11 +14,12 @@ namespace Zenkei.Controls;
 /// Renders a 2:1 equirectangular panorama image and allows placing / moving
 /// markers interactively.
 ///
-/// Rendering uses Avalonia's managed <see cref="DrawingContext"/> on the UI
-/// thread. (An earlier version used a raw-Skia <c>ICustomDrawOperation</c>,
-/// which forced the compositor into a continuous per-frame render loop —
-/// pegging the CPU, flickering, and racing UI-thread image disposal against
-/// render-thread drawing.)
+/// Pan/zoom state is persisted in <see cref="PanoramaEditorViewModel.PanZoomScale"/>,
+/// <see cref="PanoramaEditorViewModel.PanZoomOffX"/>, and
+/// <see cref="PanoramaEditorViewModel.PanZoomOffY"/> so that it survives
+/// Dock.Avalonia recreating the view on every tab switch.  A null PanZoomScale
+/// means "fit to window" mode; the canvas recalculates on every resize in that
+/// mode and does not persist the computed scale back to the ViewModel.
 ///
 /// Coordinate system:
 ///   Internal: (yaw_rad, pitch_rad) where yaw ∈ [-π, π], pitch ∈ [0, π] top-to-bottom.
@@ -51,6 +53,12 @@ public class PanoramaCanvas : Control
     public event Action<MarkerBase?>? MarkerSelected;
     public event Action<double, double>? AddMarkerRequested; // (yaw, pitch)
 
+    /// <summary>Fired on every frame while a marker is being dragged.</summary>
+    public event Action<MarkerBase, double, double>? MarkerMoved; // (marker, yaw, pitch)
+
+    /// <summary>Fired on every frame while the initial viewpoint is being dragged.</summary>
+    public event Action<double, double>? InitialViewChanged; // (yaw, pitch)
+
     // ── Private state ─────────────────────────────────────────────────────────
 
     private Bitmap? _bitmap;
@@ -70,8 +78,15 @@ public class PanoramaCanvas : Control
     private bool _dragMoved;
     private Point _dragStart;
 
+    // dragging the initial-viewpoint special marker
+    private bool _draggingInitial;
+
     private const float MarkerRadius = 14f;
     private const float HitRadius = 18f;
+    // circle radius of the initial-viewpoint glyph + tick extensions
+    private const float InitialCircleR = 12f;
+    private const float InitialTickExt = 7f;
+    private const float InitialHitRadius = InitialCircleR + InitialTickExt;
 
     public PanoramaCanvas()
     {
@@ -86,12 +101,27 @@ public class PanoramaCanvas : Control
 
         if (change.Property == SceneProperty)
         {
+            // Unsubscribe old scene, subscribe new — so image path changes redraw us.
+            if (change.OldValue is Scene oldScene) oldScene.PropertyChanged -= OnScenePropertyChanged;
+            if (change.NewValue is Scene newScene) newScene.PropertyChanged += OnScenePropertyChanged;
             LoadSceneImage();
             InvalidateVisual();
         }
         else if (change.Property == SelectedMarkerProperty)
         {
+            // Unsubscribe old, subscribe new — so editor-side coord changes redraw us.
+            if (change.OldValue is MarkerBase oldM) oldM.PropertyChanged -= OnSelectedMarkerPropertyChanged;
+            if (change.NewValue is MarkerBase newM) newM.PropertyChanged += OnSelectedMarkerPropertyChanged;
             InvalidateVisual();
+        }
+        else if (change.Property == DataContextProperty)
+        {
+            // Unsubscribe old VM, subscribe new — so external PanZoomScale=null triggers re-fit.
+            if (change.OldValue is PanoramaEditorViewModel oldVm) oldVm.PropertyChanged -= OnVmPropertyChanged;
+            if (change.NewValue is PanoramaEditorViewModel newVm) newVm.PropertyChanged += OnVmPropertyChanged;
+            // DataContext (re-)bound on every tab switch — restore saved transform.
+            if (_bitmap != null)
+                RestoreFromDoc();
         }
     }
 
@@ -118,26 +148,74 @@ public class PanoramaCanvas : Control
                 _bitmap = new Bitmap(path);
                 _imgW = _bitmap.PixelSize.Width;
                 _imgH = _bitmap.PixelSize.Height;
-                ResetTransform();
+                // Restore from doc (which may call FitToWindow if PanZoomScale is null).
+                // Returns early if the control isn't sized yet; OnSizeChanged handles it.
+                RestoreFromDoc();
             }
             catch { /* ignore bad images */ }
         }
     }
 
-    private void ResetTransform()
+    // ── Transform helpers ─────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Reads pan/zoom state from the document ViewModel. If PanZoomScale is null,
+    /// falls back to FitToWindow. Safe to call before layout (guards on Bounds size).
+    /// </summary>
+    private void RestoreFromDoc()
     {
         if (_bitmap == null || Bounds.Width == 0 || Bounds.Height == 0) return;
-        var scaleX = (float)(Bounds.Width / _imgW);
+
+        var vm = DataContext as PanoramaEditorViewModel;
+        if (vm?.PanZoomScale is float scale)
+        {
+            _scale = scale;
+            _offX  = vm.PanZoomOffX;
+            _offY  = vm.PanZoomOffY;
+        }
+        else
+        {
+            // No saved state → fit to window (stays in fit mode until user zooms).
+            FitToWindow();
+        }
+    }
+
+    /// <summary>
+    /// Scales and centers the image to fill the canvas. Does NOT persist the
+    /// computed values back to the ViewModel, so PanZoomScale stays null and the
+    /// canvas keeps recalculating on every resize.
+    /// </summary>
+    private void FitToWindow()
+    {
+        if (_bitmap == null || Bounds.Width == 0 || Bounds.Height == 0) return;
+        var scaleX = (float)(Bounds.Width  / _imgW);
         var scaleY = (float)(Bounds.Height / _imgH);
         _scale = Math.Min(scaleX, scaleY);
-        _offX = (float)((Bounds.Width - _imgW * _scale) / 2f);
-        _offY = (float)((Bounds.Height - _imgH * _scale) / 2f);
+        _offX  = (float)((Bounds.Width  - _imgW * _scale) / 2f);
+        _offY  = (float)((Bounds.Height - _imgH * _scale) / 2f);
+    }
+
+    /// <summary>
+    /// Writes the current transform to the ViewModel so it persists across tab
+    /// switches.  Calling this marks the document as having a user-set zoom (i.e.
+    /// PanZoomScale becomes non-null, disabling fit-to-window mode).
+    /// </summary>
+    private void SaveToDoc()
+    {
+        if (DataContext is not PanoramaEditorViewModel vm) return;
+        vm.PanZoomScale = _scale;
+        vm.PanZoomOffX  = _offX;
+        vm.PanZoomOffY  = _offY;
     }
 
     protected override void OnSizeChanged(SizeChangedEventArgs e)
     {
         base.OnSizeChanged(e);
-        if (_bitmap != null) ResetTransform();
+        // Always restore on size change: if PanZoomScale is null this recalculates
+        // the fit; if it's non-null this re-applies the saved transform (no-op for
+        // the common case where _scale/_offX/_offY already match).
+        if (_bitmap != null && Bounds.Width > 0 && Bounds.Height > 0)
+            RestoreFromDoc();
         InvalidateVisual();
     }
 
@@ -170,7 +248,7 @@ public class PanoramaCanvas : Control
                 DrawMarker(context, m, m == SelectedMarker);
 
             var (cx, cy) = CoordsToCanvas(Scene.Initial[0], Scene.Initial[1]);
-            DrawCrosshair(context, cx, cy);
+            DrawInitialMarker(context, cx, cy);
         }
     }
 
@@ -203,13 +281,29 @@ public class PanoramaCanvas : Control
         context.DrawText(txt, new Point(cx - txt.Width / 2, cy - txt.Height / 2));
     }
 
-    private static void DrawCrosshair(DrawingContext context, float cx, float cy)
+    /// <summary>
+    /// Draws the initial-viewpoint marker: a circle with cardinal tick marks
+    /// extending outward, indicating it can be dragged.
+    /// </summary>
+    private static void DrawInitialMarker(DrawingContext context, float cx, float cy)
     {
-        var pen = new Pen(new SolidColorBrush(Color.FromArgb(180, 255, 200, 0)), 1.5);
-        const float r = 10;
-        context.DrawLine(pen, new Point(cx - r, cy), new Point(cx + r, cy));
-        context.DrawLine(pen, new Point(cx, cy - r), new Point(cx, cy + r));
-        context.DrawEllipse(null, pen, new Point(cx, cy), 4, 4);
+        var color = Color.FromArgb(210, 255, 200, 0);
+        var pen   = new Pen(new SolidColorBrush(color), 1.5);
+        var fill  = new SolidColorBrush(Color.FromArgb(55, 255, 200, 0));
+        const float r   = InitialCircleR;
+        const float ext = InitialTickExt;
+
+        // Semi-transparent circle (signals "this is the view cone")
+        context.DrawEllipse(fill, pen, new Point(cx, cy), r, r);
+
+        // Cardinal tick marks beyond the circle (signals "draggable")
+        context.DrawLine(pen, new Point(cx - r - ext, cy), new Point(cx - r, cy));
+        context.DrawLine(pen, new Point(cx + r,       cy), new Point(cx + r + ext, cy));
+        context.DrawLine(pen, new Point(cx, cy - r - ext), new Point(cx, cy - r));
+        context.DrawLine(pen, new Point(cx, cy + r),       new Point(cx, cy + r + ext));
+
+        // Center dot
+        context.DrawEllipse(new SolidColorBrush(color), null, new Point(cx, cy), 3f, 3f);
     }
 
     // ── Coordinate helpers ────────────────────────────────────────────────────
@@ -279,6 +373,7 @@ public class PanoramaCanvas : Control
         _scale = Math.Clamp(_scale * factor, 0.1f, 20f);
         _offX = mx - (mx - _offX) * (_scale / oldScale);
         _offY = my - (my - _offY) * (_scale / oldScale);
+        SaveToDoc();
         InvalidateVisual();
     }
 
@@ -305,7 +400,7 @@ public class PanoramaCanvas : Control
             var hit = HitTest(pt);
             if (hit != null)
             {
-                // Start potential drag
+                // Start potential marker drag
                 _dragging = hit;
                 _dragMoved = false;
                 _dragStart = pt;
@@ -315,6 +410,20 @@ public class PanoramaCanvas : Control
             }
             else
             {
+                // Check for initial-viewpoint drag (only when no marker is hit)
+                if (Scene != null && _bitmap != null)
+                {
+                    var (icx, icy) = CoordsToCanvas(Scene.Initial[0], Scene.Initial[1]);
+                    var idx = (float)pt.X - icx;
+                    var idy = (float)pt.Y - icy;
+                    if (idx * idx + idy * idy <= InitialHitRadius * InitialHitRadius)
+                    {
+                        _draggingInitial = true;
+                        e.Pointer.Capture(this);
+                        return;
+                    }
+                }
+
                 SelectedMarker = null;
                 MarkerSelected?.Invoke(null);
                 _dragging = null;
@@ -331,10 +440,23 @@ public class PanoramaCanvas : Control
         {
             _offX = _panOffXStart + (float)(pt.X - _panStart.X);
             _offY = _panOffYStart + (float)(pt.Y - _panStart.Y);
+            SaveToDoc();
             InvalidateVisual();
             return;
         }
 
+        // Initial-viewpoint drag
+        if (_draggingInitial && Scene != null)
+        {
+            var (yaw, pitch) = CanvasToCoords(pt);
+            Scene.Initial[0] = yaw;
+            Scene.Initial[1] = pitch;
+            InitialViewChanged?.Invoke(yaw, pitch);
+            InvalidateVisual();
+            return;
+        }
+
+        // Marker drag
         if (_dragging?.Coords is { Length: >= 2 })
         {
             var dx = pt.X - _dragStart.X;
@@ -346,6 +468,7 @@ public class PanoramaCanvas : Control
                 var (yaw, pitch) = CanvasToCoords(pt);
                 _dragging.Coords[0] = yaw;
                 _dragging.Coords[1] = pitch;
+                MarkerMoved?.Invoke(_dragging, yaw, pitch);
                 InvalidateVisual();
             }
         }
@@ -357,12 +480,37 @@ public class PanoramaCanvas : Control
         e.Pointer.Capture(null);
 
         if (_isPanning) { _isPanning = false; return; }
+        if (_draggingInitial) { _draggingInitial = false; return; }
 
         if (_dragging != null)
         {
             _dragging = null;
             _dragMoved = false;
         }
+    }
+
+    private void OnScenePropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(Scene.Image))
+        {
+            LoadSceneImage();
+            InvalidateVisual();
+        }
+    }
+
+    private void OnVmPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(PanoramaEditorViewModel.PanZoomScale))
+        {
+            RestoreFromDoc();
+            InvalidateVisual();
+        }
+    }
+
+    private void OnSelectedMarkerPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(MarkerBase.Coords))
+            InvalidateVisual();
     }
 
     protected override void OnDoubleTapped(TappedEventArgs e)

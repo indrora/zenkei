@@ -1,0 +1,45 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Zenkei.ViewModels"
+             xmlns:pg="using:Avalonia.PropertyGrid.Controls"
+             x:Class="Zenkei.Views.ScenePropertiesView"
+             x:DataType="vm:ScenePropertiesViewModel">
+
+  <DockPanel>
+
+    <!-- Initial-view controls (only visible when a scene is selected) -->
+    <StackPanel DockPanel.Dock="Top"
+                Margin="8,6,8,4" Spacing="4"
+                IsVisible="{Binding HasSelectedScene}">
+      <Button Command="{Binding ChangeImageCommand}"
+              HorizontalAlignment="Stretch" Padding="8,3"
+              ToolTip.Tip="Replace the panorama image for this scene">
+        Change Image…
+      </Button>
+      <Separator Margin="0,2"/>
+      <TextBlock Text="Initial view (yaw / pitch rad)" Classes="FormLabel"/>
+      <Grid ColumnDefinitions="*,6,*">
+        <NumericUpDown Grid.Column="0" Value="{Binding SceneInitialX}"
+                       Minimum="-3.1416" Maximum="3.1416"
+                       FormatString="F4" Increment="0.05"
+                       ToolTip.Tip="Yaw (-π … π)"/>
+        <NumericUpDown Grid.Column="2" Value="{Binding SceneInitialY}"
+                       Minimum="0" Maximum="3.1416"
+                       FormatString="F4" Increment="0.05"
+                       ToolTip.Tip="Pitch (0=top, π=bottom)"/>
+      </Grid>
+      <Separator/>
+    </StackPanel>
+
+    <!-- No-selection hint -->
+    <TextBlock DockPanel.Dock="Top"
+               Margin="8,8"
+               Text="No scene selected"
+               FontStyle="Italic" Opacity="0.6"
+               IsVisible="{Binding !HasSelectedScene}"/>
+
+    <!-- PropertyGrid for Title, Description, Image, HFov -->
+    <pg:PropertyGrid DataContext="{Binding SelectedScene}"/>
+
+  </DockPanel>
+</UserControl>
