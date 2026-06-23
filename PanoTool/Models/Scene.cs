@@ -49,12 +49,36 @@ public class Scene : INotifyPropertyChanged
             ? Image
             : Path.Combine(BaseDirectory, Image);
 
-    // Radians — read/written by the canvas and serializer; degrees accessed via InitialViewSubject.
+    // Radians — read/written by the canvas and serializer; degrees via InitialPosition below.
     [Browsable(false)]
     public YawPitch Initial
     {
         get => InitialMarker.Coords ?? new YawPitch(0, 0);
-        set { InitialMarker.Coords = value; InitialMarker.NotifyCoordsChanged(); OnPropertyChanged(); }
+        set
+        {
+            InitialMarker.Coords = value;
+            InitialMarker.NotifyCoordsChanged();
+            OnPropertyChanged();
+            // Keep the browsable degree-view in sync when the canvas updates us directly.
+            OnPropertyChanged(nameof(InitialPosition));
+        }
+    }
+
+    /// <summary>
+    /// Initial viewpoint in degrees — shown in the Properties panel and rendered by
+    /// YawPitchCellFactory. Backed by <see cref="Initial"/> which stores radians.
+    /// </summary>
+    [Category("View"), Description("Initial camera direction (degrees)")]
+    public YawPitch InitialPosition
+    {
+        get => new(Initial.Yaw   * 180.0 / Math.PI,
+                   Initial.Pitch * 180.0 / Math.PI);
+        set
+        {
+            Initial = new YawPitch(value.Yaw   * Math.PI / 180.0,
+                                   value.Pitch * Math.PI / 180.0);
+            OnPropertyChanged();
+        }
     }
 
     public InitialMarker InitialMarker
