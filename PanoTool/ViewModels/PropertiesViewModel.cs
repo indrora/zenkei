@@ -29,6 +29,7 @@ public partial class PropertiesViewModel : Tool
     private InitialViewSubject? _initialViewSubject;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanDeleteMarker))]
     private object? _subject;
 
     public PropertiesViewModel(MainWindowViewModel main)
@@ -84,9 +85,23 @@ public partial class PropertiesViewModel : Tool
 
         if (marker == null) { Subject = scene; return; }
 
+        // The InitialMarker is synthetic; show the initial-view subject instead.
+        if (marker is InitialMarker) { SetInitialPov(scene); return; }
+
         _marker = marker;
         marker.PropertyChanged += OnMarkerChanged;
         Subject = marker;
+    }
+
+    public bool CanDeleteMarker => _marker != null;
+
+    [CommunityToolkit.Mvvm.Input.RelayCommand]
+    private void DeleteSelectedMarker()
+    {
+        if (_marker == null || _scene == null) return;
+        _scene.Markers.Remove(_marker);
+        SetScene(_scene);
+        _main.MarkDirty();
     }
 
     /// <summary>
