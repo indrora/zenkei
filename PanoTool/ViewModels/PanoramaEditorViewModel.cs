@@ -47,7 +47,7 @@ public partial class PanoramaEditorViewModel : Document
 
     partial void OnSelectedMarkerChanged(MarkerBase? value)
     {
-        _main.MarkerEditor.SetMarker(value, Scene, _main.Document);
+        _main.Properties.SetMarker(value, Scene);
     }
 
     /// <summary>
@@ -84,19 +84,19 @@ public partial class PanoramaEditorViewModel : Document
     /// </summary>
     public void RefreshTitle() => OnPropertyChanged(nameof(TabSubTitle));
 
-    /// <summary>Relay from canvas MarkerMoved event — updates the editor panel live.</summary>
+    /// <summary>Relay from canvas MarkerMoved event — updates the Properties panel live.</summary>
     public void OnMarkerMoved(double yaw, double pitch)
     {
-        _main.MarkerEditor.UpdateCoords(yaw, pitch);
+        _main.Properties.UpdateMarkerCoords(yaw, pitch);
         _main.MarkDirty();
     }
 
-    /// <summary>Relay from canvas InitialViewChanged — syncs the scene panel display.</summary>
+    /// <summary>Relay from canvas InitialViewChanged — syncs the Properties panel display.</summary>
     public void OnInitialViewChanged(double yaw, double pitch)
     {
         Scene.Initial[0] = yaw;
         Scene.Initial[1] = pitch;
-        _main.SceneProperties.SyncInitialView(yaw, pitch);
+        _main.Properties.SyncInitialView(yaw, pitch);
         _main.MarkDirty();
     }
 }

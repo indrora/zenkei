@@ -13,11 +13,8 @@
         <DataTemplate DataType="vm:SceneListViewModel">
             <views:SceneListView/>
         </DataTemplate>
-        <DataTemplate DataType="vm:ScenePropertiesViewModel">
-            <views:ScenePropertiesView/>
-        </DataTemplate>
-        <DataTemplate DataType="vm:MarkerEditorViewModel">
-            <views:MarkerEditorView/>
+        <DataTemplate DataType="vm:PropertiesViewModel">
+            <views:PropertiesView/>
         </DataTemplate>
         <DataTemplate DataType="vm:PanoramaEditorViewModel">
             <views:PanoramaEditorView/>

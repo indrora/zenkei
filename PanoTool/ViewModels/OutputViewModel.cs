@@ -13,7 +13,7 @@ public class OutputViewModel : Tool
         Id = "Output";
         Title = "Output";
         CanClose = false;
-        CanPin = false;
-        CanFloat = false;
+        CanPin = true;
+        CanFloat = true;
     }
 }

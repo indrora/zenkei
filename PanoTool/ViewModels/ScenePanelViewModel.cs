@@ -56,6 +56,9 @@ public partial class SceneListViewModel : Tool
         value.PropertyChanged += OnScenePropertyChanged;
         _main.OpenScene(value);
 
+        // Push scene to the unified Properties panel.
+        _main.Properties.SetScene(value);
+
         // Sync tree highlight when SelectedScene is set programmatically (add/remove).
         if (!_syncingTreeScene)
         {
@@ -81,12 +84,20 @@ public partial class SceneListViewModel : Tool
                 case SceneItemNode sn:
                     SelectedScene = sn.Scene;
                     break;
+
+                case InitialPovNode ipn:
+                    // Shows scene properties (including initial-view NUDs) in Properties.
+                    SelectedScene = ipn.RelatedScene;
+                    break;
+
                 case ImageFileNode ifn:
                     SelectedScene = ifn.RelatedScene;
                     break;
+
                 case MarkerItemNode mn:
                     SelectedScene = mn.RelatedScene;
-                    // Jump to the marker in the open editor tab.
+                    // Setting SelectedMarker on the editor triggers Properties.SetMarker via
+                    // PanoramaEditorViewModel.OnSelectedMarkerChanged.
                     if (mn.RelatedScene != null)
                     {
                         var editor = _main.GetOrCreateEditor(mn.RelatedScene);

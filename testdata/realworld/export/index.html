@@ -1,0 +1,26 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panoramic Tour</title>
+  <link rel="stylesheet" href="pannellum.min.css">
+  <style>
+    html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; }
+    #viewer { width: 100%; height: 100vh; }
+.hs-icon-link { background: rgba(0,0,0,0.5); border-radius:50%; width:32px; height:32px; }
+.hs-icon-info { background: rgba(0,0,0,0.5); border-radius:50%; width:32px; height:32px; }
+.hs-icon-scene { background: rgba(0,0,0,0.5); border-radius:50%; width:32px; height:32px; }
+
+  </style>
+</head>
+<body>
+  <div id="viewer"></div>
+  <script src="pannellum.min.js"></script>
+  <script>
+    fetch('tour.json')
+      .then(r => r.json())
+      .then(cfg => pannellum.viewer('viewer', cfg));
+  </script>
+</body>
+</html>

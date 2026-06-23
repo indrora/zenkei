@@ -10,6 +10,12 @@ public abstract class MarkerBase : INotifyPropertyChanged
     protected void OnPropertyChanged([CallerMemberName] string? name = null)
         => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 
+    /// <summary>
+    /// Fires PropertyChanged for Coords so that the canvas can redraw when the
+    /// marker editor panel writes new coordinates into the array directly.
+    /// </summary>
+    internal void NotifyCoordsChanged() => OnPropertyChanged(nameof(Coords));
+
     // Type and Coords are managed by the marker editor header, not the PropertyGrid
     [Browsable(false)]
     public abstract string Type { get; }

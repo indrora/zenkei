@@ -20,9 +20,8 @@ public partial class MainWindowViewModel : ViewModelBase
 
     // ── Sub-panels ────────────────────────────────────────────────────────────
 
-    public SceneListViewModel SceneList { get; private set; }
-    public ScenePropertiesViewModel SceneProperties { get; private set; }
-    public MarkerEditorViewModel MarkerEditor { get; private set; }
+    public SceneListViewModel  SceneList   { get; private set; }
+    public PropertiesViewModel Properties  { get; private set; }
 
     // ── Document state ────────────────────────────────────────────────────────
 
@@ -49,11 +48,10 @@ public partial class MainWindowViewModel : ViewModelBase
 
     public MainWindowViewModel()
     {
-        SceneList = new SceneListViewModel(this);
-        SceneProperties = new ScenePropertiesViewModel(this, SceneList);
-        MarkerEditor = new MarkerEditorViewModel(this);
+        SceneList  = new SceneListViewModel(this);
+        Properties = new PropertiesViewModel(this);
 
-        DockFactory = new DockFactory(SceneList, SceneProperties, MarkerEditor, new OutputViewModel());
+        DockFactory = new DockFactory(SceneList, Properties, new OutputViewModel());
         Layout = DockFactory.CreateLayout();
         DockFactory.InitLayout(Layout);
     }

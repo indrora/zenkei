@@ -1,0 +1,415 @@
+﻿{
+  "default": {
+    "firstScene": "steam_room",
+    "hfov": 100,
+    "sceneFadeDuration": 1000
+  },
+  "scenes": {
+    "steam_room": {
+      "type": "equirectangular",
+      "panorama": "images/steam_room.jpg",
+      "title": "Spa Steam Room",
+      "yaw": -22.9183,
+      "pitch": -0.0002,
+      "hfov": 100,
+      "hotSpots": [
+        {
+          "yaw": 0,
+          "pitch": 65.9358,
+          "type": "info",
+          "text": "Star-shaped recessed spotlights stud the vaulted mosaic ceiling.",
+          "cssClass": "hs-icon-info"
+        },
+        {
+          "yaw": 16.0428,
+          "pitch": 2.9104,
+          "type": "info",
+          "text": "Exit door \u2014 the only way out of the steam.",
+          "cssClass": "hs-icon-info"
+        },
+        {
+          "yaw": 57.2958,
+          "pitch": 6.9211,
+          "type": "info",
+          "text": "Floor-to-ceiling glass doors reveal a hazy golden sunset beyond the spa terrace.",
+          "cssClass": "hs-icon-info"
+        },
+        {
+          "yaw": -166.1578,
+          "pitch": 4.0563,
+          "type": "info",
+          "text": "Circular wall fixture \u2014 steam inlet or temperature sensor.",
+          "cssClass": "hs-icon-info"
+        },
+        {
+          "yaw": 126.0507,
+          "pitch": -0.0002,
+          "type": "scene",
+          "sceneId": "alcazar_toledo",
+          "text": "Step outside \u2014 visit the Alc\u00E1zar of Toledo",
+          "cssClass": "hs-icon-scene"
+        }
+      ]
+    },
+    "dynamotion_hall": {
+      "type": "equirectangular",
+      "panorama": "images/dynamotion_hall.jpg",
+      "title": "Dynamotion Hall \u2014 Science City Kolkata",
+      "yaw": 0,
+      "pitch": 4.0563,
+      "hfov": 100,
+      "hotSpots": [
+        {
+          "yaw": 5.7296,
+          "pitch": 4.0563,
+          "type": "info",
+          "text": "\u0022Infinite Well\u0022 \u2014 mirrors create the illusion of infinite depth in a shallow circular well.",
+          "cssClass": "hs-icon-info"
+        },
+        {
+          "yaw": 0,
+          "pitch": 48.747,
+          "type": "info",
+          "text": "Curved reinforced-concrete roof with internal lighting bays \u2014 spans the full width of the hall.",
+          "cssClass": "hs-icon-info"
+        },
+        {
+          "yaw": -85.9437,
+          "pitch": 4.0563,
+          "type": "info",
+          "text": "Interactive physics exhibits in the left wing.",
+          "cssClass": "hs-icon-info"
+        },
+        {
+          "yaw": 143.2394,
+          "pitch": 4.0563,
+          "type": "info",
+          "text": "Digital displays and green-screen exhibits in the right wing.",
+          "cssClass": "hs-icon-info"
+        },
+        {
+          "yaw": -28.6479,
+          "pitch": -2.8192,
+          "type": "info",
+          "text": "Terracotta and cream floor stripes guide visitors from exhibit to exhibit.",
+          "cssClass": "hs-icon-info"
+        },
+        {
+          "yaw": 103.1324,
+          "pitch": 4.0563,
+          "type": "scene",
+          "sceneId": "bitm_ground",
+          "text": "To the Birla Industrial \u0026 Technological Museum",
+          "cssClass": "hs-icon-scene"
+        },
+        {
+          "yaw": -126.0507,
+          "pitch": 4.0563,
+          "type": "scene",
+          "sceneId": "ccc_35c3",
+          "text": "To 35C3 \u2014 Chaos Communication Congress",
+          "cssClass": "hs-icon-scene"
+        }
+      ]
+    },
+    "bitm_ground": {
+      "type": "equirectangular",
+      "panorama": "images/bitm_ground.jpg",
+      "title": "Ground Floor \u2014 Birla Industrial \u0026 Technological Museum, Kolkata",
+      "yaw": 11.4592,
+      "pitch": 4.0563,
+      "hfov": 100,
+      "hotSpots": [
+        {
+          "yaw": -143.2394,
+          "pitch": 9.7859,
+          "type": "info",
+          "text": "Grand marble staircase to the upper galleries.",
+          "cssClass": "hs-icon-info"
+        },
+        {
+          "yaw": -143.2394,
+          "pitch": 35.569,
+          "type": "info",
+          "text": "Portrait in oils above the staircase \u2014 likely a founding patron of the museum.",
+          "cssClass": "hs-icon-info"
+        },
+        {
+          "yaw": -74.4845,
+          "pitch": 9.7859,
+          "type": "info",
+          "text": "Children\u0027s science education wall panels in primary colours.",
+          "cssClass": "hs-icon-info"
+        },
+        {
+          "yaw": 45.8366,
+          "pitch": 8.64,
+          "type": "info",
+          "text": "\u0022Motive Power\u0022 gallery entrance \u2014 engines, electricity, and industrial machinery.",
+          "cssClass": "hs-icon-info"
+        },
+        {
+          "yaw": 8.5944,
+          "pitch": -15.9972,
+          "type": "info",
+          "text": "Black-and-white checkerboard marble floor \u2014 a hallmark of the Birla Museum\u0027s colonial architecture.",
+          "cssClass": "hs-icon-info"
+        },
+        {
+          "yaw": -57.2958,
+          "pitch": 4.0563,
+          "type": "scene",
+          "sceneId": "dynamotion_hall",
+          "text": "Back to Dynamotion Hall",
+          "cssClass": "hs-icon-scene"
+        },
+        {
+          "yaw": 126.0507,
+          "pitch": 4.0563,
+          "type": "scene",
+          "sceneId": "steam_room",
+          "text": "Take a break in the steam room",
+          "cssClass": "hs-icon-scene"
+        }
+      ]
+    },
+    "alcazar_toledo": {
+      "type": "equirectangular",
+      "panorama": "images/alcazar_toledo.jpg",
+      "title": "Alc\u00E1zar de Toledo",
+      "yaw": -114.5916,
+      "pitch": 9.7859,
+      "hfov": 100,
+      "hotSpots": [
+        {
+          "yaw": -114.5916,
+          "pitch": 21.2451,
+          "type": "info",
+          "text": "The Alc\u00E1zar de Toledo \u2014 a 16th-century royal palace rebuilt after the Civil War; now a military museum.",
+          "cssClass": "hs-icon-info"
+        },
+        {
+          "yaw": -40.107,
+          "pitch": 9.7859,
+          "type": "info",
+          "text": "Art Nouveau cast-iron street lamp on the Paseo de la Rosa.",
+          "cssClass": "hs-icon-info"
+        },
+        {
+          "yaw": 28.6479,
+          "pitch": 4.0563,
+          "type": "info",
+          "text": "The Tagus river valley stretches out below Toledo\u0027s sandstone cliffs.",
+          "cssClass": "hs-icon-info"
+        },
+        {
+          "yaw": 103.1324,
+          "pitch": 4.0563,
+          "type": "info",
+          "text": "Stone balustrade overlooking the valley \u2014 a popular spot for photographs of the Alc\u00E1zar.",
+          "cssClass": "hs-icon-info"
+        },
+        {
+          "yaw": -160.4282,
+          "pitch": 4.0563,
+          "type": "scene",
+          "sceneId": "steam_room",
+          "text": "Back to the spa",
+          "cssClass": "hs-icon-scene"
+        },
+        {
+          "yaw": 0,
+          "pitch": 4.0563,
+          "type": "scene",
+          "sceneId": "st_joseph",
+          "text": "Visit St. Joseph\u0027s Church in Berlin",
+          "cssClass": "hs-icon-scene"
+        }
+      ]
+    },
+    "st_joseph": {
+      "type": "equirectangular",
+      "panorama": "images/st_joseph.jpg",
+      "title": "St. Joseph\u0027s Church, Berlin-Wedding",
+      "yaw": 0,
+      "pitch": 15.5155,
+      "hfov": 100,
+      "hotSpots": [
+        {
+          "yaw": 0,
+          "pitch": 18.3803,
+          "type": "info",
+          "text": "High altar beneath the apse \u2014 gilded columns and mosaic panels flank the tabernacle.",
+          "cssClass": "hs-icon-info"
+        },
+        {
+          "yaw": 24.0642,
+          "pitch": 10.9318,
+          "type": "info",
+          "text": "Carved wooden pulpit with an ornate sounding board, overlooking the nave.",
+          "cssClass": "hs-icon-info"
+        },
+        {
+          "yaw": -11.4592,
+          "pitch": 26.9746,
+          "type": "info",
+          "text": "The apse semi-dome: painted deep blue with gold stars and a Christ Pantocrator figure at the crown.",
+          "cssClass": "hs-icon-info"
+        },
+        {
+          "yaw": 0,
+          "pitch": 58.4873,
+          "type": "info",
+          "text": "Barrel-vaulted nave ceiling with painted decoration between the brick ribs.",
+          "cssClass": "hs-icon-info"
+        },
+        {
+          "yaw": 180.0004,
+          "pitch": 4.0563,
+          "type": "info",
+          "text": "Looking back toward the entrance \u2014 rows of wooden pews fill the 250-seat nave.",
+          "cssClass": "hs-icon-info"
+        },
+        {
+          "yaw": -85.9437,
+          "pitch": 4.0563,
+          "type": "scene",
+          "sceneId": "alcazar_toledo",
+          "text": "To Toledo, Spain",
+          "cssClass": "hs-icon-scene"
+        },
+        {
+          "yaw": 103.1324,
+          "pitch": 4.0563,
+          "type": "scene",
+          "sceneId": "mooskamp_workshop",
+          "text": "Visit the Mooskamp tram depot",
+          "cssClass": "hs-icon-scene"
+        }
+      ]
+    },
+    "ccc_35c3": {
+      "type": "equirectangular",
+      "panorama": "images/ccc_35c3.jpg",
+      "title": "35C3 \u2014 Chaos Communication Congress (Hamburg, 2018)",
+      "yaw": 0,
+      "pitch": -0.0002,
+      "hfov": 100,
+      "hotSpots": [
+        {
+          "yaw": 0,
+          "pitch": -0.0002,
+          "type": "info",
+          "text": "Main assembly hall \u2014 a sea of laptops, network cables, and project screens.",
+          "cssClass": "hs-icon-info"
+        },
+        {
+          "yaw": 57.2958,
+          "pitch": 15.5155,
+          "type": "info",
+          "text": "Talk stage \u2014 CCC hosts dozens of lectures on security, privacy, and technology politics.",
+          "cssClass": "hs-icon-info"
+        },
+        {
+          "yaw": -57.2958,
+          "pitch": 4.0563,
+          "type": "info",
+          "text": "Assembly areas where interest groups set up their own villages and workshops.",
+          "cssClass": "hs-icon-info"
+        },
+        {
+          "yaw": 0,
+          "pitch": 55.6225,
+          "type": "info",
+          "text": "CCH ceiling \u2014 one of Hamburg\u0027s largest covered event spaces.",
+          "cssClass": "hs-icon-info"
+        },
+        {
+          "yaw": 114.5916,
+          "pitch": 4.0563,
+          "type": "info",
+          "text": "Link",
+          "URL": "https://events.ccc.de/congress/2018/wiki/index.php/Main_Page",
+          "cssClass": "hs-icon-link"
+        },
+        {
+          "yaw": -114.5916,
+          "pitch": 4.0563,
+          "type": "scene",
+          "sceneId": "mooskamp_workshop",
+          "text": "Back to the tram depot",
+          "cssClass": "hs-icon-scene"
+        },
+        {
+          "yaw": 28.6479,
+          "pitch": -7.4028,
+          "type": "scene",
+          "sceneId": "dynamotion_hall",
+          "text": "To Dynamotion Hall, Kolkata",
+          "cssClass": "hs-icon-scene"
+        }
+      ]
+    },
+    "mooskamp_workshop": {
+      "type": "equirectangular",
+      "panorama": "images/mooskamp_workshop.jpg",
+      "title": "Bahnhof Mooskamp \u2014 Tram Depot Workshop",
+      "yaw": 0,
+      "pitch": 4.0563,
+      "hfov": 100,
+      "hotSpots": [
+        {
+          "yaw": -34.3775,
+          "pitch": 4.0563,
+          "type": "info",
+          "text": "Left tram: vintage Berlin-type car in the butter-yellow livery standard on West Berlin lines through the 1980s.",
+          "cssClass": "hs-icon-info"
+        },
+        {
+          "yaw": 34.3775,
+          "pitch": 6.9211,
+          "type": "info",
+          "text": "Right tram: second historic car on the adjacent track, coupling gear still visible.",
+          "cssClass": "hs-icon-info"
+        },
+        {
+          "yaw": 0,
+          "pitch": 52.7577,
+          "type": "info",
+          "text": "Corrugated iron arched roof \u2014 typical Prussian-era railway workshop construction.",
+          "cssClass": "hs-icon-info"
+        },
+        {
+          "yaw": 180.0004,
+          "pitch": 12.6507,
+          "type": "info",
+          "text": "The far end of the shed opens onto the yard; daylight filters through the entrance doors.",
+          "cssClass": "hs-icon-info"
+        },
+        {
+          "yaw": 2.8648,
+          "pitch": -8.5487,
+          "type": "info",
+          "text": "Rail tracks embedded in the concrete floor run the full length of the workshop.",
+          "cssClass": "hs-icon-info"
+        },
+        {
+          "yaw": -114.5916,
+          "pitch": 4.0563,
+          "type": "scene",
+          "sceneId": "st_joseph",
+          "text": "Back to St. Joseph\u0027s Church",
+          "cssClass": "hs-icon-scene"
+        },
+        {
+          "yaw": 126.0507,
+          "pitch": 4.0563,
+          "type": "scene",
+          "sceneId": "ccc_35c3",
+          "text": "To 35C3 \u2014 Chaos Communication Congress",
+          "cssClass": "hs-icon-scene"
+        }
+      ]
+    }
+  }
+}

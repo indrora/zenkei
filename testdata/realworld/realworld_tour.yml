@@ -1,0 +1,235 @@
+information:
+  title: Real-World Panorama Tour
+  author: Zenkei
+
+default:
+  hfov: 100
+
+scenes:
+  # ── Small files ──────────────────────────────────────────────────────────────
+
+  steam_room:
+    image: SteamRoom_EquiRect_Left.jpg    # 2.15 MB  3072×1536
+    title: Spa Steam Room
+    description: >
+      A modern luxury spa steam room clad in mosaic tiles, with sculptural
+      wall-wash uplighting and a misty sunset visible through floor-to-ceiling
+      glass doors.
+    initial: [-0.4, 1.5708]
+    markers:
+      - type: info
+        coords: [0.0, 0.42]
+        text: "Star-shaped recessed spotlights stud the vaulted mosaic ceiling."
+      - type: info
+        coords: [0.28, 1.52]
+        text: "Exit door — the only way out of the steam."
+      - type: info
+        coords: [1.0, 1.45]
+        text: "Floor-to-ceiling glass doors reveal a hazy golden sunset beyond the spa terrace."
+      - type: info
+        coords: [-2.9, 1.50]
+        text: "Circular wall fixture — steam inlet or temperature sensor."
+      - type: scene
+        coords: [2.2, 1.5708]
+        scene: alcazar_toledo
+        text: "Step outside — visit the Alcázar of Toledo"
+
+  dynamotion_hall:
+    image: Dynamotion_Hall_Kolkata.jpg    # 0.97 MB  3840×1423
+    title: Dynamotion Hall — Science City Kolkata
+    description: >
+      The Dynamotion Hall at Science City, Kolkata — a large interactive
+      science exhibition space with colourful exhibits and a graceful
+      curved roof structure.
+    initial: [0.0, 1.5]
+    markers:
+      - type: info
+        coords: [0.1, 1.50]
+        text: "\"Infinite Well\" — mirrors create the illusion of infinite depth in a shallow circular well."
+      - type: info
+        coords: [0.0, 0.72]
+        text: "Curved reinforced-concrete roof with internal lighting bays — spans the full width of the hall."
+      - type: info
+        coords: [-1.5, 1.50]
+        text: "Interactive physics exhibits in the left wing."
+      - type: info
+        coords: [2.5, 1.50]
+        text: "Digital displays and green-screen exhibits in the right wing."
+      - type: info
+        coords: [-0.5, 1.62]
+        text: "Terracotta and cream floor stripes guide visitors from exhibit to exhibit."
+      - type: scene
+        coords: [1.8, 1.5]
+        scene: bitm_ground
+        text: "To the Birla Industrial & Technological Museum"
+      - type: scene
+        coords: [-2.2, 1.5]
+        scene: ccc_35c3
+        text: "To 35C3 — Chaos Communication Congress"
+
+  bitm_ground:
+    image: Ground_FloorBITM_-_Kolkata.jpg    # 0.87 MB  3840×1346
+    title: Ground Floor — Birla Industrial & Technological Museum, Kolkata
+    description: >
+      The grand entrance lobby of the BITM — a colonial-era building housing
+      science and technology exhibits in Kolkata's museum quarter.
+    initial: [0.2, 1.5]
+    markers:
+      - type: info
+        coords: [-2.5, 1.40]
+        text: "Grand marble staircase to the upper galleries."
+      - type: info
+        coords: [-2.5, 0.95]
+        text: "Portrait in oils above the staircase — likely a founding patron of the museum."
+      - type: info
+        coords: [-1.3, 1.40]
+        text: "Children's science education wall panels in primary colours."
+      - type: info
+        coords: [0.8, 1.42]
+        text: "\"Motive Power\" gallery entrance — engines, electricity, and industrial machinery."
+      - type: info
+        coords: [0.15, 1.85]
+        text: "Black-and-white checkerboard marble floor — a hallmark of the Birla Museum's colonial architecture."
+      - type: scene
+        coords: [-1.0, 1.5]
+        scene: dynamotion_hall
+        text: "Back to Dynamotion Hall"
+      - type: scene
+        coords: [2.2, 1.5]
+        scene: steam_room
+        text: "Take a break in the steam room"
+
+  # ── Medium file ──────────────────────────────────────────────────────────────
+
+  alcazar_toledo:
+    image: Alcazar_de_Toledo_y_Academia_de_Infantería.jpg    # 1.44 MB  6432×3216
+    title: Alcázar de Toledo
+    description: >
+      The Alcázar of Toledo and the Academia de Infantería rise above the
+      city plaza on a cold, overcast evening. The Tagus valley unfolds below.
+    initial: [-2.0, 1.40]
+    markers:
+      - type: info
+        coords: [-2.0, 1.20]
+        text: "The Alcázar de Toledo — a 16th-century royal palace rebuilt after the Civil War; now a military museum."
+      - type: info
+        coords: [-0.7, 1.40]
+        text: "Art Nouveau cast-iron street lamp on the Paseo de la Rosa."
+      - type: info
+        coords: [0.5, 1.50]
+        text: "The Tagus river valley stretches out below Toledo's sandstone cliffs."
+      - type: info
+        coords: [1.8, 1.50]
+        text: "Stone balustrade overlooking the valley — a popular spot for photographs of the Alcázar."
+      - type: scene
+        coords: [-2.8, 1.5]
+        scene: steam_room
+        text: "Back to the spa"
+      - type: scene
+        coords: [0.0, 1.5]
+        scene: st_joseph
+        text: "Visit St. Joseph's Church in Berlin"
+
+  # ── Large files ───────────────────────────────────────────────────────────────
+
+  st_joseph:
+    image: "St._Joseph,_Berlin-Wedding.jpg"    # 23.14 MB  10000×5000
+    title: St. Joseph's Church, Berlin-Wedding
+    description: >
+      Neo-Romanesque parish church (1908) in the Wedding district of Berlin.
+      Red-brick vaulting, polychrome apse mosaics, and a deep-blue star-studded
+      dome cap the richly decorated interior.
+    initial: [0.0, 1.30]
+    markers:
+      - type: info
+        coords: [0.0, 1.25]
+        text: "High altar beneath the apse — gilded columns and mosaic panels flank the tabernacle."
+      - type: info
+        coords: [0.42, 1.38]
+        text: "Carved wooden pulpit with an ornate sounding board, overlooking the nave."
+      - type: info
+        coords: [-0.2, 1.10]
+        text: "The apse semi-dome: painted deep blue with gold stars and a Christ Pantocrator figure at the crown."
+      - type: info
+        coords: [0.0, 0.55]
+        text: "Barrel-vaulted nave ceiling with painted decoration between the brick ribs."
+      - type: info
+        coords: [3.1416, 1.50]
+        text: "Looking back toward the entrance — rows of wooden pews fill the 250-seat nave."
+      - type: scene
+        coords: [-1.5, 1.5]
+        scene: alcazar_toledo
+        text: "To Toledo, Spain"
+      - type: scene
+        coords: [1.8, 1.5]
+        scene: mooskamp_workshop
+        text: "Visit the Mooskamp tram depot"
+
+  ccc_35c3:
+    image: 35C3.jpg    # 19.66 MB  20000×10000
+    title: 35C3 — Chaos Communication Congress (Hamburg, 2018)
+    description: >
+      The 35th Chaos Communication Congress at the CCH Congress Center Hamburg,
+      December 2018. One of the world's largest gatherings of hackers, security
+      researchers, and digital rights activists.
+    initial: [0.0, 1.5708]
+    markers:
+      - type: info
+        coords: [0.0, 1.5708]
+        text: "Main assembly hall — a sea of laptops, network cables, and project screens."
+      - type: info
+        coords: [1.0, 1.30]
+        text: "Talk stage — CCC hosts dozens of lectures on security, privacy, and technology politics."
+      - type: info
+        coords: [-1.0, 1.50]
+        text: "Assembly areas where interest groups set up their own villages and workshops."
+      - type: info
+        coords: [0.0, 0.60]
+        text: "CCH ceiling — one of Hamburg's largest covered event spaces."
+      - type: link
+        coords: [2.0, 1.5]
+        url: "https://events.ccc.de/congress/2018/wiki/index.php/Main_Page"
+        text: "35C3 event wiki"
+      - type: scene
+        coords: [-2.0, 1.5]
+        scene: mooskamp_workshop
+        text: "Back to the tram depot"
+      - type: scene
+        coords: [0.5, 1.7]
+        scene: dynamotion_hall
+        text: "To Dynamotion Hall, Kolkata"
+
+  mooskamp_workshop:
+    image: Bahnhof-Mooskamp_Werkshalle-innen.jpg    # 31.52 MB  10856×5428
+    title: Bahnhof Mooskamp — Tram Depot Workshop
+    description: >
+      Interior of a historic German tram depot housing two vintage Berlin-type
+      streetcars. The corrugated arched iron roof spans the full width of the
+      two-track shed.
+    initial: [0.0, 1.50]
+    markers:
+      - type: info
+        coords: [-0.6, 1.50]
+        text: "Left tram: vintage Berlin-type car in the butter-yellow livery standard on West Berlin lines through the 1980s."
+      - type: info
+        coords: [0.6, 1.45]
+        text: "Right tram: second historic car on the adjacent track, coupling gear still visible."
+      - type: info
+        coords: [0.0, 0.65]
+        text: "Corrugated iron arched roof — typical Prussian-era railway workshop construction."
+      - type: info
+        coords: [3.1416, 1.35]
+        text: "The far end of the shed opens onto the yard; daylight filters through the entrance doors."
+      - type: info
+        coords: [0.05, 1.72]
+        text: "Rail tracks embedded in the concrete floor run the full length of the workshop."
+      - type: scene
+        coords: [-2.0, 1.5]
+        scene: st_joseph
+        text: "Back to St. Joseph's Church"
+      - type: scene
+        coords: [2.2, 1.5]
+        scene: ccc_35c3
+        text: "To 35C3 — Chaos Communication Congress"
+
+markers: {}

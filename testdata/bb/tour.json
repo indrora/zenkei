@@ -1,0 +1,169 @@
+﻿{
+  "default": {
+    "firstScene": "pano_sunset",
+    "hfov": 100,
+    "sceneFadeDuration": 1000
+  },
+  "scenes": {
+    "pano_sunset": {
+      "type": "equirectangular",
+      "panorama": "images/pano_sunset.jpg",
+      "title": "Sunset",
+      "yaw": 0,
+      "pitch": -0.0002,
+      "hfov": 100,
+      "hotSpots": [
+        {
+          "yaw": 0,
+          "pitch": -0.0002,
+          "type": "info",
+          "text": "You are looking due east at the equator (yaw=0deg, pitch=0deg).",
+          "cssClass": "hs-icon-info"
+        },
+        {
+          "yaw": -90.0002,
+          "pitch": 29.9999,
+          "type": "info",
+          "text": "Northwest sky -- 30deg above the horizon looking west (-90deg yaw, \u002B30deg elev).",
+          "cssClass": "hs-icon-info"
+        },
+        {
+          "yaw": 90.0002,
+          "pitch": -0.0002,
+          "type": "scene",
+          "sceneId": "pano_arctic",
+          "text": "Head east to the Arctic",
+          "cssClass": "hs-icon-scene"
+        },
+        {
+          "yaw": 180.0004,
+          "pitch": -0.0002,
+          "type": "info",
+          "text": "Link",
+          "URL": "https://pannellum.org",
+          "cssClass": "hs-icon-link"
+        }
+      ]
+    },
+    "pano_arctic": {
+      "type": "equirectangular",
+      "panorama": "images/pano_arctic.jpg",
+      "title": "Arctic",
+      "yaw": -30.0001,
+      "pitch": 14.9998,
+      "hfov": 100,
+      "hotSpots": [
+        {
+          "yaw": 0,
+          "pitch": 59.9999,
+          "type": "info",
+          "text": "Looking up at 60deg elevation.",
+          "cssClass": "hs-icon-info"
+        },
+        {
+          "yaw": 60.0001,
+          "pitch": -0.0002,
+          "type": "info",
+          "text": "Due east at the equator (\u002B60deg yaw).",
+          "cssClass": "hs-icon-info"
+        },
+        {
+          "yaw": -90.0002,
+          "pitch": -0.0002,
+          "type": "scene",
+          "sceneId": "pano_forest",
+          "text": "Head west into the Forest",
+          "cssClass": "hs-icon-scene"
+        },
+        {
+          "yaw": 0,
+          "pitch": -0.0002,
+          "type": "scene",
+          "sceneId": "pano_sunset",
+          "text": "Back to Sunset",
+          "cssClass": "hs-icon-scene"
+        }
+      ]
+    },
+    "pano_forest": {
+      "type": "equirectangular",
+      "panorama": "images/pano_forest.jpg",
+      "title": "Forest",
+      "yaw": 45.0001,
+      "pitch": 20.0017,
+      "hfov": 100,
+      "hotSpots": [
+        {
+          "yaw": 0,
+          "pitch": -0.0002,
+          "type": "info",
+          "text": "Prime meridian equator crossing.",
+          "cssClass": "hs-icon-info"
+        },
+        {
+          "yaw": -180.0004,
+          "pitch": -30.0003,
+          "type": "info",
+          "text": "Anti-meridian, 30deg below horizon.",
+          "cssClass": "hs-icon-info"
+        },
+        {
+          "yaw": 30.0001,
+          "pitch": -0.0002,
+          "type": "info",
+          "text": "Link",
+          "URL": "https://github.com/wieslawsoltes/Dock",
+          "cssClass": "hs-icon-link"
+        },
+        {
+          "yaw": 90.0002,
+          "pitch": -0.0002,
+          "type": "scene",
+          "sceneId": "pano_desert",
+          "text": "On to the Desert",
+          "cssClass": "hs-icon-scene"
+        }
+      ]
+    },
+    "pano_desert": {
+      "type": "equirectangular",
+      "panorama": "images/pano_desert.jpg",
+      "title": "Desert",
+      "yaw": -45.0001,
+      "pitch": 9.9979,
+      "hfov": 100,
+      "hotSpots": [
+        {
+          "yaw": 0,
+          "pitch": -0.0002,
+          "type": "info",
+          "text": "Equator, facing east. The golden horizon.",
+          "cssClass": "hs-icon-info"
+        },
+        {
+          "yaw": 0,
+          "pitch": -60.0004,
+          "type": "info",
+          "text": "Nadir region -- looking nearly straight down (-60deg elevation).",
+          "cssClass": "hs-icon-info"
+        },
+        {
+          "yaw": -90.0002,
+          "pitch": -0.0002,
+          "type": "scene",
+          "sceneId": "pano_sunset",
+          "text": "Back to Sunset (full loop)",
+          "cssClass": "hs-icon-scene"
+        },
+        {
+          "yaw": 90.0002,
+          "pitch": -0.0002,
+          "type": "scene",
+          "sceneId": "pano_forest",
+          "text": "Back to Forest",
+          "cssClass": "hs-icon-scene"
+        }
+      ]
+    }
+  }
+}

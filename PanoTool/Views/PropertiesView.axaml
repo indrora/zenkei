@@ -1,0 +1,114 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Zenkei.ViewModels"
+             xmlns:controls="using:Zenkei.Controls"
+             x:Class="Zenkei.Views.PropertiesView"
+             x:DataType="vm:PropertiesViewModel"
+             MinWidth="200">
+
+  <Grid>
+
+    <!-- ── Empty: nothing selected ─────────────────────────────────────────── -->
+    <TextBlock IsVisible="{Binding IsEmpty}"
+               Text="No selection"
+               FontStyle="Italic" Opacity="0.5"
+               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+
+    <!-- ── Scene panel ─────────────────────────────────────────────────────── -->
+    <DockPanel IsVisible="{Binding IsScene}">
+
+      <StackPanel DockPanel.Dock="Top" Margin="8,6,8,4" Spacing="4">
+
+        <!-- Scene ID rename -->
+        <TextBlock Text="Scene ID" Classes="FormLabel"/>
+        <Grid ColumnDefinitions="*,Auto">
+          <TextBox Grid.Column="0"
+                   Text="{Binding EditingSceneId}"
+                   PlaceholderText="scene_id"
+                   FontFamily="Cascadia Code,Consolas,monospace"
+                   ToolTip.Tip="Internal key used in the YAML file and scene-link markers"/>
+          <Button Grid.Column="1" Content="Rename" Margin="4,0,0,0"
+                  Command="{Binding RenameSceneCommand}"
+                  ToolTip.Tip="Apply new ID and update all scene-link marker references"/>
+        </Grid>
+
+        <Button Command="{Binding ChangeImageCommand}"
+                HorizontalAlignment="Stretch" Padding="8,3"
+                ToolTip.Tip="Replace the panorama image for this scene">
+          Change Image…
+        </Button>
+
+        <Separator Margin="0,2"/>
+        <TextBlock Text="Initial view (yaw / pitch rad)" Classes="FormLabel"/>
+        <Grid ColumnDefinitions="*,6,*">
+          <NumericUpDown Grid.Column="0" Value="{Binding SceneInitialX}"
+                         Minimum="-3.1416" Maximum="3.1416"
+                         FormatString="F4" Increment="0.05"
+                         ToolTip.Tip="Yaw (-π … π)"/>
+          <NumericUpDown Grid.Column="2" Value="{Binding SceneInitialY}"
+                         Minimum="0" Maximum="3.1416"
+                         FormatString="F4" Increment="0.05"
+                         ToolTip.Tip="Pitch (0=top, π=bottom)"/>
+        </Grid>
+        <Separator/>
+
+      </StackPanel>
+
+      <!-- Scene PropertyGrid fills the remaining space -->
+      <controls:ZenkeiPropertyGrid DataContext="{Binding SceneSubject}"/>
+
+    </DockPanel>
+
+    <!-- ── Marker panel ─────────────────────────────────────────────────────── -->
+    <DockPanel IsVisible="{Binding IsMarker}">
+
+      <StackPanel DockPanel.Dock="Top" Margin="8,6,8,4" Spacing="4">
+
+        <TextBlock Text="Type" Classes="FormLabel"/>
+        <ComboBox ItemsSource="{Binding MarkerTypes}"
+                  SelectedItem="{Binding MarkerType}"
+                  HorizontalAlignment="Stretch"/>
+
+        <!-- Adaptive layout: mini-map left, NUDs right (wide) or below (narrow).
+             Code-behind moves NudsPanel via OnSizeChanged. -->
+        <Grid Name="CoordsGrid" RowDefinitions="Auto,Auto" ColumnDefinitions="*,Auto">
+
+          <controls:MarkerLocationControl Grid.Column="0" Grid.Row="0"
+                                          VerticalAlignment="Top"
+                                          Yaw="{Binding CoordsX}"
+                                          Pitch="{Binding CoordsY}"/>
+
+          <StackPanel Name="NudsPanel" Grid.Column="0" Grid.Row="1"
+                      Spacing="2" Margin="0,4,0,0" VerticalAlignment="Center">
+            <Grid ColumnDefinitions="40,*">
+              <TextBlock Grid.Column="0" Text="Yaw°"  VerticalAlignment="Center" Classes="FormLabel"/>
+              <NumericUpDown Grid.Column="1"
+                             Value="{Binding NudYaw}"
+                             Minimum="-180" Maximum="180"
+                             FormatString="F1" Increment="1"
+                             ToolTip.Tip="Yaw in degrees (-180 … 180)"/>
+            </Grid>
+            <Grid ColumnDefinitions="40,*">
+              <TextBlock Grid.Column="0" Text="Pitch°" VerticalAlignment="Center" Classes="FormLabel"/>
+              <NumericUpDown Grid.Column="1"
+                             Value="{Binding NudPitch}"
+                             Minimum="0" Maximum="180"
+                             FormatString="F1" Increment="1"
+                             ToolTip.Tip="Pitch in degrees (0 = top, 180 = bottom)"/>
+            </Grid>
+          </StackPanel>
+
+        </Grid>
+
+        <Separator/>
+
+      </StackPanel>
+
+      <!-- Marker PropertyGrid fills remaining space -->
+      <controls:ZenkeiPropertyGrid DataContext="{Binding CurrentMarker}"/>
+
+    </DockPanel>
+
+  </Grid>
+
+</UserControl>
