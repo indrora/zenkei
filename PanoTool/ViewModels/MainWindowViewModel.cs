@@ -220,6 +220,9 @@ public partial class MainWindowViewModel : ViewModelBase
             _editors[newId] = editor;
         }
 
+        // Refresh the tree node label now that the ID has changed.
+        SceneList.RefreshSceneNodeLabel(scene);
+
         MarkDirty();
         return null;
     }

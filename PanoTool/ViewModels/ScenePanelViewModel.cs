@@ -8,20 +8,29 @@ using Zenkei.Models;
 namespace Zenkei.ViewModels;
 
 /// <summary>
-/// Left dock tool — shows the scene list with add / remove.
+/// Left dock tool — shows the VS-style scene explorer tree with add / remove.
 /// Selection changes are observable so ScenePropertiesViewModel can follow them.
 /// </summary>
 public partial class SceneListViewModel : Tool
 {
     private readonly MainWindowViewModel _main;
     private Scene? _subscribedScene;
+    private ScenesFolderNode? _scenesFolder;
+    // Guard against SelectedScene ↔ SelectedTreeNode sync loops.
+    private bool _syncingTreeScene;
 
     public ObservableCollection<Scene> Scenes { get; } = [];
+
+    /// Single-element list containing the TourRootNode; bound to TreeView.ItemsSource.
+    public ObservableCollection<SceneTreeNode> TreeNodes { get; } = [];
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasSelectedScene))]
     [NotifyCanExecuteChangedFor(nameof(RemoveSceneCommand))]
     private Scene? _selectedScene;
+
+    [ObservableProperty]
+    private SceneTreeNode? _selectedTreeNode;
 
     public bool HasSelectedScene => SelectedScene != null;
 
@@ -29,7 +38,7 @@ public partial class SceneListViewModel : Tool
     {
         _main = main;
         Id = "SceneList";
-        Title = "Scenes";
+        Title = "Explorer";
         CanClose = false;
         CanPin = true;
         CanFloat = true;
@@ -46,6 +55,47 @@ public partial class SceneListViewModel : Tool
         if (value == null) return;
         value.PropertyChanged += OnScenePropertyChanged;
         _main.OpenScene(value);
+
+        // Sync tree highlight when SelectedScene is set programmatically (add/remove).
+        if (!_syncingTreeScene)
+        {
+            _syncingTreeScene = true;
+            try
+            {
+                var node = _scenesFolder?.Find(value);
+                if (node != null && SelectedTreeNode != node)
+                    SelectedTreeNode = node;
+            }
+            finally { _syncingTreeScene = false; }
+        }
+    }
+
+    partial void OnSelectedTreeNodeChanged(SceneTreeNode? value)
+    {
+        if (_syncingTreeScene) return;
+        _syncingTreeScene = true;
+        try
+        {
+            switch (value)
+            {
+                case SceneItemNode sn:
+                    SelectedScene = sn.Scene;
+                    break;
+                case ImageFileNode ifn:
+                    SelectedScene = ifn.RelatedScene;
+                    break;
+                case MarkerItemNode mn:
+                    SelectedScene = mn.RelatedScene;
+                    // Jump to the marker in the open editor tab.
+                    if (mn.RelatedScene != null)
+                    {
+                        var editor = _main.GetOrCreateEditor(mn.RelatedScene);
+                        editor.SelectedMarker = mn.Marker;
+                    }
+                    break;
+            }
+        }
+        finally { _syncingTreeScene = false; }
     }
 
     private void OnScenePropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -82,6 +132,7 @@ public partial class SceneListViewModel : Tool
             scene.BaseDirectory = projectBaseDir;
             _main.Document.Scenes[scene.Id] = scene;
             Scenes.Add(scene);
+            _scenesFolder?.AddScene(new SceneItemNode(scene));
             _main.MarkDirty();
             SelectedScene = scene;
         }
@@ -98,9 +149,13 @@ public partial class SceneListViewModel : Tool
             _subscribedScene = null;
         }
 
+        var treeNode = _scenesFolder?.Find(SelectedScene);
         var id = SelectedScene.Id;
+
         _main.Document.Scenes.Remove(id);
         Scenes.Remove(SelectedScene);
+        if (treeNode != null) _scenesFolder?.RemoveScene(treeNode);
+
         _main.DockFactory?.CloseDocument(id);
         _main.MarkDirty();
         SelectedScene = Scenes.FirstOrDefault();
@@ -119,15 +174,36 @@ public partial class SceneListViewModel : Tool
         Scenes.Clear();
         foreach (var scene in doc.Scenes.Values)
             Scenes.Add(scene);
+
+        // Build the project tree.
+        _scenesFolder = new ScenesFolderNode();
+        foreach (var scene in doc.Scenes.Values)
+            _scenesFolder.AddScene(new SceneItemNode(scene));
+
+        var root = new TourRootNode(doc);
+        root.Children.Add(_scenesFolder);
+
+        TreeNodes.Clear();
+        TreeNodes.Add(root);
+
         SelectedScene = Scenes.FirstOrDefault();
     }
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
+    // ── Tree helpers ──────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Refreshes the tree label for a scene node after an ID rename.
+    /// Called by <see cref="MainWindowViewModel.TryRenameScene"/> on success.
+    /// </summary>
+    public void RefreshSceneNodeLabel(Scene scene) =>
+        _scenesFolder?.Find(scene)?.RefreshLabel();
+
+    // ── Static helpers ────────────────────────────────────────────────────────
 
     internal static Scene CreateSceneFromImagePath(string imagePath)
     {
         var raw = Path.GetFileNameWithoutExtension(imagePath);
-        var id = new string(raw.Select(c => char.IsLetterOrDigit(c) ? c : '_').ToArray());
+        var id  = new string(raw.Select(c => char.IsLetterOrDigit(c) ? c : '_').ToArray());
         if (string.IsNullOrEmpty(id)) id = "Scene";
         return new Scene { Id = id, Image = imagePath, Title = id };
     }

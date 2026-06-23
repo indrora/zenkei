@@ -1,19 +1,17 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:Zenkei.ViewModels"
-             xmlns:models="using:Zenkei.Models"
-             xmlns:pg="using:Avalonia.PropertyGrid.Controls"
-             x:Class="Zenkei.Views.ScenePanelView"
-             x:DataType="vm:ScenePanelViewModel">
+             x:Class="Zenkei.Views.SceneListView"
+             x:DataType="vm:SceneListViewModel">
 
-  <Grid RowDefinitions="Auto,*,Auto,*">
+  <DockPanel>
 
-    <!-- Row 0: Header -->
-    <Border Grid.Row="0"
+    <!-- Header -->
+    <Border DockPanel.Dock="Top"
             BorderBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}"
             BorderThickness="0,0,0,1" Padding="6,4">
       <DockPanel>
-        <TextBlock Text="Scenes" FontWeight="SemiBold" VerticalAlignment="Center"/>
+        <TextBlock Text="Explorer" FontWeight="SemiBold" VerticalAlignment="Center"/>
         <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="4">
           <Button Command="{Binding AddImageCommand}"
                   ToolTip.Tip="Add image as new scene"
@@ -25,38 +23,63 @@
       </DockPanel>
     </Border>
 
-    <!-- Row 1: Scene list -->
-    <ListBox Grid.Row="1"
-             ItemsSource="{Binding Scenes}"
-             SelectedItem="{Binding SelectedScene}">
-      <ListBox.ItemTemplate>
-        <DataTemplate DataType="models:Scene">
-          <TextBlock Text="{Binding Title}" Padding="4,2"/>
+    <!-- VS-style project explorer tree.
+         TourRootNode → ScenesFolderNode → SceneItemNode → [ImageFileNode, MarkerItemNode...] -->
+    <TreeView ItemsSource="{Binding TreeNodes}"
+              SelectedItem="{Binding SelectedTreeNode, Mode=TwoWay}">
+      <TreeView.DataTemplates>
+
+        <!-- ── Tour root ── -->
+        <TreeDataTemplate x:DataType="vm:TourRootNode" ItemsSource="{Binding Children}">
+          <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+            <TextBlock Text="{Binding Icon}"
+                       Foreground="{DynamicResource SystemAccentColorBrush}"
+                       FontSize="10" VerticalAlignment="Center"/>
+            <TextBlock Text="{Binding Label}" FontWeight="SemiBold" VerticalAlignment="Center"/>
+          </StackPanel>
+        </TreeDataTemplate>
+
+        <!-- ── Scenes folder ── -->
+        <TreeDataTemplate x:DataType="vm:ScenesFolderNode" ItemsSource="{Binding Children}">
+          <TextBlock Text="{Binding Label}" Opacity="0.8" VerticalAlignment="Center"/>
+        </TreeDataTemplate>
+
+        <!-- ── Scene item (expandable) ── -->
+        <TreeDataTemplate x:DataType="vm:SceneItemNode" ItemsSource="{Binding Children}">
+          <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+            <!-- Coloured square mimics VS file-type icon -->
+            <Border Width="9" Height="9" Background="#4A9EFF"
+                    CornerRadius="2" VerticalAlignment="Center"/>
+            <TextBlock Text="{Binding Label}"
+                       FontFamily="Cascadia Code,Consolas,Courier New,monospace"
+                       FontSize="12" VerticalAlignment="Center"/>
+          </StackPanel>
+        </TreeDataTemplate>
+
+        <!-- ── Image file (leaf) ── -->
+        <DataTemplate x:DataType="vm:ImageFileNode">
+          <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+            <Border Width="8" Height="8"
+                    BorderBrush="#666666" BorderThickness="1"
+                    Background="Transparent" VerticalAlignment="Center"/>
+            <TextBlock Text="{Binding Label}"
+                       FontSize="11" Opacity="0.65" FontStyle="Italic"
+                       VerticalAlignment="Center"/>
+          </StackPanel>
         </DataTemplate>
-      </ListBox.ItemTemplate>
-    </ListBox>
 
-    <!-- Row 2: Initial view (array — not shown in PropertyGrid) -->
-    <StackPanel Grid.Row="2"
-                Margin="8,6,8,4" Spacing="4"
-                IsVisible="{Binding HasSelectedScene}">
-      <Separator/>
-      <TextBlock Text="Initial view (yaw / pitch rad)" Classes="FormLabel"/>
-      <Grid ColumnDefinitions="*,6,*">
-        <NumericUpDown Grid.Column="0" Value="{Binding SceneInitialX}"
-                       Minimum="-3.1416" Maximum="3.1416"
-                       FormatString="F4" Increment="0.05"
-                       ToolTip.Tip="Yaw (-π … π)"/>
-        <NumericUpDown Grid.Column="2" Value="{Binding SceneInitialY}"
-                       Minimum="0" Maximum="3.1416"
-                       FormatString="F4" Increment="0.05"
-                       ToolTip.Tip="Pitch (0=top, π=bottom)"/>
-      </Grid>
-    </StackPanel>
+        <!-- ── Marker (leaf) ── -->
+        <DataTemplate x:DataType="vm:MarkerItemNode">
+          <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+            <TextBlock Text="{Binding Icon}"
+                       Foreground="{Binding IconBrush}"
+                       FontSize="11" VerticalAlignment="Center"/>
+            <TextBlock Text="{Binding Label}" FontSize="11" VerticalAlignment="Center"/>
+          </StackPanel>
+        </DataTemplate>
 
-    <!-- Row 3: PropertyGrid for Title, Description, Image, HFov -->
-    <pg:PropertyGrid Grid.Row="3"
-                     DataContext="{Binding SelectedScene}"/>
+      </TreeView.DataTemplates>
+    </TreeView>
 
-  </Grid>
+  </DockPanel>
 </UserControl>

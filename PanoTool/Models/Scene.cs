@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using Zenkei.Models.Markers;
@@ -49,5 +50,5 @@ public class Scene : INotifyPropertyChanged
     public double? HFov { get => _hFov; set { _hFov = value; OnPropertyChanged(); } }
 
     [Browsable(false)]
-    public List<MarkerBase> Markers { get; set; } = [];
+    public ObservableCollection<MarkerBase> Markers { get; set; } = [];
 }

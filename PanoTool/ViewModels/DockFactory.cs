@@ -36,11 +36,13 @@ public class DockFactory : Factory
 
     public override IRootDock CreateLayout()
     {
-        // Left area — two separate ToolDocks stacked vertically so they never tab-merge
+        // Left area — two separate ToolDocks stacked vertically so they never tab-merge.
+        // Explorer tree gets 2/3 of the vertical space; Properties panel gets 1/3.
         var sceneListDock = CreateToolDock();
         sceneListDock.Id = "SceneListDock";
-        sceneListDock.Title = "Scene List";
+        sceneListDock.Title = "Explorer";
         sceneListDock.Alignment = Alignment.Left;
+        sceneListDock.Proportion = 0.65;
         sceneListDock.VisibleDockables = CreateList<IDockable>(_sceneList);
         sceneListDock.ActiveDockable = _sceneList;
 
@@ -48,6 +50,7 @@ public class DockFactory : Factory
         scenePropsDock.Id = "ScenePropsDock";
         scenePropsDock.Title = "Scene Properties";
         scenePropsDock.Alignment = Alignment.Left;
+        scenePropsDock.Proportion = 0.35;
         scenePropsDock.VisibleDockables = CreateList<IDockable>(_sceneProperties);
         scenePropsDock.ActiveDockable = _sceneProperties;
 
@@ -55,7 +58,7 @@ public class DockFactory : Factory
         leftArea.Id = "LeftArea";
         leftArea.Title = "Left";
         leftArea.Orientation = Orientation.Vertical;
-        leftArea.Proportion = 0.22;
+        leftArea.Proportion = 0.25;   // slightly wider to show the richer tree
         leftArea.VisibleDockables = CreateList<IDockable>(
             sceneListDock,
             CreateProportionalDockSplitter(),
