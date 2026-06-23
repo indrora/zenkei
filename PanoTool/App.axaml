@@ -5,12 +5,16 @@
              xmlns:vm="using:Zenkei.ViewModels"
              xmlns:views="using:Zenkei.Views"
              xmlns:dockFluent="using:Dock.Avalonia.Themes.Fluent"
+             xmlns:dockControls="using:Dock.Avalonia.Controls"
              RequestedThemeVariant="Dark">
 
     <Application.DataTemplates>
         <!-- Explicit templates for Dock tool/document ViewModels -->
-        <DataTemplate DataType="vm:ScenePanelViewModel">
-            <views:ScenePanelView/>
+        <DataTemplate DataType="vm:SceneListViewModel">
+            <views:SceneListView/>
+        </DataTemplate>
+        <DataTemplate DataType="vm:ScenePropertiesViewModel">
+            <views:ScenePropertiesView/>
         </DataTemplate>
         <DataTemplate DataType="vm:MarkerEditorViewModel">
             <views:MarkerEditorView/>
@@ -28,5 +32,27 @@
     <Application.Styles>
         <FluentTheme />
         <dockFluent:DockFluentTheme/>
+
+        <!-- Two-part tab header for document tabs: bold internal ID + subdued title words.
+             DocumentTabStrip.ItemTemplate provides the *content* of each tab item;
+             the DocumentTabStripItem container still handles selection state, close button, etc.
+             For non-PanoramaEditorViewModel items, TabSubTitle binding silently returns empty
+             so only the Title TextBlock is visible. -->
+        <Style Selector="dockControls|DocumentTabStrip">
+            <Setter Property="ItemTemplate">
+                <Setter.Value>
+                    <DataTemplate x:DataType="vm:PanoramaEditorViewModel">
+                        <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding Title}" FontWeight="SemiBold"/>
+                            <TextBlock Text="{Binding TabSubTitle}"
+                                       FontSize="11" Opacity="0.5"
+                                       VerticalAlignment="Center"
+                                       IsVisible="{Binding TabSubTitle,
+                                           Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                        </StackPanel>
+                    </DataTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Application.Styles>
 </Application>

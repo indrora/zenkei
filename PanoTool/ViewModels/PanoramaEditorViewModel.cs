@@ -14,7 +14,11 @@ public partial class PanoramaEditorViewModel : Document
 {
     private readonly MainWindowViewModel _main;
 
-    public string SceneId { get; }
+    /// <summary>
+    /// The scene's internal dictionary key.  Settable so <see cref="MainWindowViewModel.TryRenameScene"/>
+    /// can keep it in sync after a rename without recreating the editor VM.
+    /// </summary>
+    public string SceneId { get; set; }
 
     public Scene Scene { get; }
 
@@ -46,19 +50,39 @@ public partial class PanoramaEditorViewModel : Document
         _main.MarkerEditor.SetMarker(value, Scene, _main.Document);
     }
 
+    /// <summary>
+    /// First few words of the scene title for the tab subtitle, blank when the title
+    /// matches the ID (redundant) or is empty.
+    /// </summary>
+    public string TabSubTitle
+    {
+        get
+        {
+            var t = Scene.Title;
+            if (string.IsNullOrEmpty(t) || t == SceneId) return "";
+            var words = t.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            var sub = string.Join(' ', words.Take(4));
+            return sub.Length > 30 ? sub[..27] + "…" : sub;
+        }
+    }
+
     public PanoramaEditorViewModel(Scene scene, MainWindowViewModel main)
     {
         Scene = scene;
         SceneId = scene.Id;
         _main = main;
         Id = $"PanoEditor_{scene.Id}";
-        Title = scene.Title;
+        Title = scene.Id;    // tab shows the internal name, not the human title
         CanClose = true;
         CanPin = false;
         CanFloat = false;
     }
 
-    public void RefreshTitle() => Title = Scene.Title;
+    /// <summary>
+    /// Called when Scene.Title changes externally; refreshes the tab subtitle.
+    /// Title (= SceneId) is unchanged — tab labels are the internal ID.
+    /// </summary>
+    public void RefreshTitle() => OnPropertyChanged(nameof(TabSubTitle));
 
     /// <summary>Relay from canvas MarkerMoved event — updates the editor panel live.</summary>
     public void OnMarkerMoved(double yaw, double pitch)
