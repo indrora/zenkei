@@ -29,6 +29,8 @@ public partial class SceneListViewModel : Tool
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasSelectedScene))]
     [NotifyCanExecuteChangedFor(nameof(RemoveSceneCommand))]
+    [NotifyCanExecuteChangedFor(nameof(MoveSceneUpCommand))]
+    [NotifyCanExecuteChangedFor(nameof(MoveSceneDownCommand))]
     private Scene? _selectedScene;
 
     [ObservableProperty]
@@ -179,6 +181,47 @@ public partial class SceneListViewModel : Tool
     {
         if (SelectedScene != null)
             DoRemoveScene(SelectedScene);
+    }
+
+    [RelayCommand(CanExecute = nameof(CanMoveSceneUp))]
+    private void MoveSceneUp() => MoveSelectedScene(-1);
+
+    [RelayCommand(CanExecute = nameof(CanMoveSceneDown))]
+    private void MoveSceneDown() => MoveSelectedScene(1);
+
+    private bool CanMoveSceneUp   => SelectedScene != null && Scenes.IndexOf(SelectedScene) > 0;
+    private bool CanMoveSceneDown => SelectedScene != null && Scenes.IndexOf(SelectedScene) < Scenes.Count - 1;
+
+    private void MoveSelectedScene(int direction)
+    {
+        if (SelectedScene == null) return;
+        var idx = Scenes.IndexOf(SelectedScene);
+        var newIdx = idx + direction;
+        if (newIdx < 0 || newIdx >= Scenes.Count) return;
+
+        Scenes.Move(idx, newIdx);
+
+        // Mirror the reorder in the tree folder children
+        if (_scenesFolder != null)
+        {
+            var node = _scenesFolder.Find(SelectedScene);
+            if (node != null)
+            {
+                var children = _scenesFolder.Children;
+                var nodeIdx = children.IndexOf(node);
+                var newNodeIdx = nodeIdx + direction;
+                if (newNodeIdx >= 0 && newNodeIdx < children.Count)
+                    children.Move(nodeIdx, newNodeIdx);
+            }
+        }
+
+        // Rebuild dict in new order so the serialiser emits scenes in the right sequence
+        _main.Document.Scenes = Scenes.ToDictionary(s => s.Id, s => s);
+        _main.MarkDirty();
+
+        // Re-evaluate can-execute for both commands after the move
+        MoveSceneUpCommand.NotifyCanExecuteChanged();
+        MoveSceneDownCommand.NotifyCanExecuteChanged();
     }
 
     // ── Node action methods (called by tree node commands) ────────────────────

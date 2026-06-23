@@ -14,6 +14,12 @@
       <DockPanel>
         <TextBlock Text="Explorer" FontWeight="SemiBold" VerticalAlignment="Center"/>
         <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="4">
+          <Button Command="{Binding MoveSceneUpCommand}"
+                  ToolTip.Tip="Move selected scene up"
+                  Padding="6,2">↑</Button>
+          <Button Command="{Binding MoveSceneDownCommand}"
+                  ToolTip.Tip="Move selected scene down"
+                  Padding="6,2">↓</Button>
           <Button Command="{Binding AddImageCommand}"
                   ToolTip.Tip="Add image as new scene"
                   Padding="6,2">+</Button>
