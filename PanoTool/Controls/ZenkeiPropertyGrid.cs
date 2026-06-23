@@ -12,7 +12,10 @@ public class ZenkeiPropertyGrid : PGControl
     public ZenkeiPropertyGrid()
     {
         // Factories is initialised in PropertyGrid() before InitializeComponent,
-        // so this append is safe in the derived constructor body.
+        // so appending in the derived constructor body is safe.
+        // YawPitchCellFactory (priority 2000) must be registered before
+        // DegreeCellFactory (priority 1000) so it wins for YawPitch properties.
+        Factories.AddFactory(new YawPitchCellFactory());
         Factories.AddFactory(new DegreeCellFactory());
     }
 }
