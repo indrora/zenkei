@@ -12,6 +12,19 @@
         SelectedMarker="{Binding SelectedMarker}"
         />
 
+    <!-- Zoom HUD — top-right overlay, sits above the canvas -->
+    <Border HorizontalAlignment="Right" VerticalAlignment="Top"
+            Background="#CC181828" CornerRadius="4" Margin="8"
+            Padding="6,3">
+      <StackPanel Orientation="Horizontal" Spacing="6">
+        <TextBlock Text="{Binding ZoomLabel}" Foreground="White"
+                   VerticalAlignment="Center" FontSize="12"/>
+        <Button Content="Fit" Command="{Binding ResetZoomCommand}"
+                Padding="4,1" FontSize="11"
+                ToolTip.Tip="Reset zoom to fit window (also: double-click canvas edge)"/>
+      </StackPanel>
+    </Border>
+
     <!-- Context menu for adding markers -->
     <Grid.ContextMenu>
       <ContextMenu x:Name="CanvasContextMenu">
