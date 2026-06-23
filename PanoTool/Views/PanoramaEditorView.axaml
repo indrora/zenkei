@@ -25,13 +25,5 @@
       </StackPanel>
     </Border>
 
-    <!-- Context menu for adding markers -->
-    <Grid.ContextMenu>
-      <ContextMenu x:Name="CanvasContextMenu">
-        <MenuItem Header="Add Info Marker"    Tag="info"/>
-        <MenuItem Header="Add Link Marker"    Tag="link"/>
-        <MenuItem Header="Add Scene Link"     Tag="scene"/>
-      </ContextMenu>
-    </Grid.ContextMenu>
   </Grid>
 </UserControl>

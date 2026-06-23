@@ -10,20 +10,38 @@ public partial class PanoramaEditorView : UserControl
 {
     private double _pendingYaw, _pendingPitch;
 
+    // Context menu is built in code so Avalonia's auto-open-on-right-click
+    // doesn't fire before we've stored the cursor coordinates.
+    private readonly ContextMenu _markerContextMenu;
+
     public PanoramaEditorView()
     {
         InitializeComponent();
 
-        var canvas = this.FindControl<PanoramaCanvas>("Canvas")!;
-        canvas.MarkerSelected += OnMarkerSelected;
-        canvas.AddMarkerRequested += OnAddMarkerRequested;
+        _markerContextMenu = BuildContextMenu();
 
-        // Wire context menu items
-        if (this.FindControl<ContextMenu>("CanvasContextMenu") is { } cm)
+        var canvas = this.FindControl<PanoramaCanvas>("Canvas")!;
+        canvas.MarkerSelected        += OnMarkerSelected;
+        canvas.AddMarkerRequested    += OnAddMarkerRequested;
+        canvas.MarkerMoved           += OnCanvasMarkerMoved;
+        canvas.InitialViewChanged    += OnCanvasInitialViewChanged;
+    }
+
+    private ContextMenu BuildContextMenu()
+    {
+        var items = new[]
         {
-            foreach (MenuItem mi in cm.Items.OfType<MenuItem>())
-                mi.Click += OnContextMenuItemClick;
-        }
+            new MenuItem { Header = "Add Info Marker", Tag = "info"  },
+            new MenuItem { Header = "Add Link Marker", Tag = "link"  },
+            new MenuItem { Header = "Add Scene Link",  Tag = "scene" },
+        };
+        foreach (var mi in items)
+            mi.Click += OnContextMenuItemClick;
+
+        var cm = new ContextMenu();
+        foreach (var mi in items)
+            cm.Items.Add(mi);
+        return cm;
     }
 
     private void OnMarkerSelected(MarkerBase? marker)
@@ -32,13 +50,23 @@ public partial class PanoramaEditorView : UserControl
             vm.SelectedMarker = marker;
     }
 
+    private void OnCanvasMarkerMoved(MarkerBase marker, double yaw, double pitch)
+    {
+        if (DataContext is PanoramaEditorViewModel vm)
+            vm.OnMarkerMoved(yaw, pitch);
+    }
+
+    private void OnCanvasInitialViewChanged(double yaw, double pitch)
+    {
+        if (DataContext is PanoramaEditorViewModel vm)
+            vm.OnInitialViewChanged(yaw, pitch);
+    }
+
     private void OnAddMarkerRequested(double yaw, double pitch)
     {
-        _pendingYaw = yaw;
+        _pendingYaw   = yaw;
         _pendingPitch = pitch;
-        // Show context menu so user picks marker type
-        if (this.FindControl<ContextMenu>("CanvasContextMenu") is { } cm)
-            cm.Open(this);
+        _markerContextMenu.Open(this);
     }
 
     private void OnContextMenuItemClick(object? sender, RoutedEventArgs e)
@@ -49,9 +77,9 @@ public partial class PanoramaEditorView : UserControl
         var type = mi.Tag as string ?? "info";
         MarkerBase newMarker = type switch
         {
-            "link" => new LinkMarker(),
+            "link"  => new LinkMarker(),
             "scene" => new SceneMarker(),
-            _ => new InfoMarker()
+            _       => new InfoMarker()
         };
         newMarker.Coords = [_pendingYaw, _pendingPitch];
 

@@ -486,6 +486,17 @@ public class PanoramaCanvas : Control
         {
             _dragging = null;
             _dragMoved = false;
+            return;
+        }
+
+        // Right-click on empty canvas space → fire AddMarkerRequested at the
+        // cursor's equirectangular position.  The view's context menu then
+        // lets the user pick the marker type.
+        if (e.InitialPressMouseButton == MouseButton.Right
+            && HitTest(e.GetPosition(this)) == null)
+        {
+            var (yaw, pitch) = CanvasToCoords(e.GetPosition(this));
+            AddMarkerRequested?.Invoke(yaw, pitch);
         }
     }
 
