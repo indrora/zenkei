@@ -67,6 +67,9 @@ public partial class MainWindow : Window
             };
             await dlg.ShowDialog(this);
         };
+
+        vm.InputDialogDelegate = async (title, prompt, defaultValue) =>
+            await new InputDialog(title, prompt, defaultValue).ShowAsync(this);
     }
 
     private static FilePickerFileType[] FiltersFrom(string[] patterns)

@@ -45,6 +45,8 @@ public partial class MainWindowViewModel : ViewModelBase
     public Func<string, string[], Task<string?>>? SaveFilePickerDelegate { get; set; }
     public Func<string, string[], Task<string?>>? OpenFilePickerDelegate { get; set; }
     public Func<string, string, Task>? ShowErrorDelegate { get; set; }
+    // title, prompt, defaultValue → user-entered string or null on cancel
+    public Func<string, string, string, Task<string?>>? InputDialogDelegate { get; set; }
 
     public MainWindowViewModel()
     {
@@ -250,6 +252,13 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     public Task ShowErrorAsync(string title, string message) => ShowError(title, message);
+
+    public Task<string?> InputDialogAsync(string title, string prompt, string defaultValue = "")
+    {
+        if (InputDialogDelegate != null)
+            return InputDialogDelegate(title, prompt, defaultValue);
+        return Task.FromResult<string?>(null);
+    }
 
     // ── File dialog helpers ───────────────────────────────────────────────────
 

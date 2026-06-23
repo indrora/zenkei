@@ -48,6 +48,14 @@
         <!-- ── Scene item (expandable) ── -->
         <TreeDataTemplate x:DataType="vm:SceneItemNode" ItemsSource="{Binding Children}">
           <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+            <StackPanel.ContextMenu>
+              <ContextMenu>
+                <MenuItem Header="Rename ID…"     Command="{Binding RenameCommand}"/>
+                <MenuItem Header="Change Image…"  Command="{Binding ChangeImageCommand}"/>
+                <Separator/>
+                <MenuItem Header="Remove Scene"   Command="{Binding RemoveCommand}"/>
+              </ContextMenu>
+            </StackPanel.ContextMenu>
             <!-- Coloured square mimics VS file-type icon -->
             <Border Width="9" Height="9" Background="#4A9EFF"
                     CornerRadius="2" VerticalAlignment="Center"/>
@@ -71,6 +79,11 @@
         <!-- ── Image file (leaf) ── -->
         <DataTemplate x:DataType="vm:ImageFileNode">
           <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+            <StackPanel.ContextMenu>
+              <ContextMenu>
+                <MenuItem Header="Change Image…" Command="{Binding ChangeImageCommand}"/>
+              </ContextMenu>
+            </StackPanel.ContextMenu>
             <Border Width="8" Height="8"
                     BorderBrush="#666666" BorderThickness="1"
                     Background="Transparent" VerticalAlignment="Center"/>
@@ -83,6 +96,11 @@
         <!-- ── Marker (leaf) ── -->
         <DataTemplate x:DataType="vm:MarkerItemNode">
           <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+            <StackPanel.ContextMenu>
+              <ContextMenu>
+                <MenuItem Header="Delete Marker" Command="{Binding DeleteCommand}"/>
+              </ContextMenu>
+            </StackPanel.ContextMenu>
             <TextBlock Text="{Binding Icon}"
                        Foreground="{Binding IconBrush}"
                        FontSize="11" VerticalAlignment="Center"/>

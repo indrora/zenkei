@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using Dock.Model.Mvvm.Controls;
 using Zenkei.Models;
 using Zenkei.Models.Markers;
+using System.ComponentModel;
 
 namespace Zenkei.ViewModels;
 
@@ -43,6 +44,16 @@ public partial class PropertiesViewModel : Tool
         DropMarker();
         _scene  = scene;
         Subject = scene;
+    }
+
+    /// <summary>
+    /// Shows tour-level metadata (title, author) when the root node is selected.
+    /// </summary>
+    public void SetTourInfo(TourInfo info)
+    {
+        DropMarker();
+        _scene  = null;
+        Subject = info;
     }
 
     /// <summary>

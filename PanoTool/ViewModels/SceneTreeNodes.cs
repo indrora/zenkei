@@ -3,6 +3,7 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using Zenkei.Models;
 using Zenkei.Models.Markers;
 
@@ -34,7 +35,17 @@ public sealed class TourRootNode : SceneTreeNode
     public override string Label => _doc.Information.Title is { Length: > 0 } t ? t : "Untitled Tour";
     public override ObservableCollection<SceneTreeNode> Children { get; } = [];
 
-    public TourRootNode(TourDocument doc) => _doc = doc;
+    public TourRootNode(TourDocument doc)
+    {
+        _doc = doc;
+        // Refresh label when the tour title is edited via the Properties panel.
+        if (doc.Information is INotifyPropertyChanged inpc)
+            inpc.PropertyChanged += (_, e) =>
+            {
+                if (e.PropertyName == nameof(TourInfo.Title))
+                    OnPropertyChanged(nameof(Label));
+            };
+    }
 }
 
 // ── "Scenes" folder ────────────────────────────────────────────────────────────
@@ -69,6 +80,9 @@ public sealed class ScenesFolderNode : SceneTreeNode
 public sealed class SceneItemNode : SceneTreeNode
 {
     public Scene Scene { get; }
+
+    private readonly SceneListViewModel _list;
+
     public override string Icon => ""; // rendered as a small coloured square in AXAML
 
     // Manual override because [ObservableProperty] cannot produce an override accessor.
@@ -78,20 +92,30 @@ public sealed class SceneItemNode : SceneTreeNode
     public override ObservableCollection<SceneTreeNode> Children { get; } = [];
     public override Scene? RelatedScene => Scene;
 
-    public SceneItemNode(Scene scene)
+    // ── Context-menu commands ─────────────────────────────────────────────────
+    public IRelayCommand RenameCommand     { get; }
+    public IRelayCommand ChangeImageCommand { get; }
+    public IRelayCommand RemoveCommand     { get; }
+
+    public SceneItemNode(Scene scene, SceneListViewModel list)
     {
         Scene  = scene;
+        _list  = list;
         _label = scene.Id;
 
         // Child 0: initial POV, Child 1: image file, then markers
         Children.Add(new InitialPovNode(scene));
-        Children.Add(new ImageFileNode(scene));
+        Children.Add(new ImageFileNode(scene, list));
 
         scene.PropertyChanged           += OnScenePropertyChanged;
         scene.Markers.CollectionChanged += OnMarkersChanged;
 
         foreach (var m in scene.Markers)
-            Children.Add(new MarkerItemNode(m, scene));
+            Children.Add(new MarkerItemNode(m, scene, list));
+
+        RenameCommand      = new AsyncRelayCommand(() => list.RenameSceneAsync(scene));
+        ChangeImageCommand = new AsyncRelayCommand(() => list.ChangeSceneImageAsync(scene));
+        RemoveCommand      = new RelayCommand(() => list.RemoveSceneFor(scene));
     }
 
     /// Called by SceneListViewModel after a rename to keep the label current.
@@ -113,7 +137,7 @@ public sealed class SceneItemNode : SceneTreeNode
         {
             case NotifyCollectionChangedAction.Add when e.NewItems != null:
                 foreach (MarkerBase m in e.NewItems)
-                    Children.Add(new MarkerItemNode(m, Scene));
+                    Children.Add(new MarkerItemNode(m, Scene, _list));
                 break;
 
             case NotifyCollectionChangedAction.Remove when e.OldItems != null:
@@ -130,7 +154,7 @@ public sealed class SceneItemNode : SceneTreeNode
                 foreach (var mn in Children.OfType<MarkerItemNode>().ToList())
                     Children.Remove(mn);
                 foreach (var m in Scene.Markers)
-                    Children.Add(new MarkerItemNode(m, Scene));
+                    Children.Add(new MarkerItemNode(m, Scene, _list));
                 break;
         }
     }
@@ -140,7 +164,7 @@ public sealed class SceneItemNode : SceneTreeNode
 
 /// <summary>
 /// Synthetic leaf representing the scene's initial viewpoint.
-/// Selecting it shows the scene properties (including initial-view NUDs).
+/// Selecting it shows only Yaw/Pitch via InitialViewSubject.
 /// Not serialised as a YAML marker.
 /// </summary>
 public sealed class InitialPovNode : SceneTreeNode
@@ -164,10 +188,14 @@ public sealed class ImageFileNode : SceneTreeNode
     public override string Label => _label;
     public override Scene? RelatedScene => _scene;
 
-    public ImageFileNode(Scene scene)
+    // ── Context-menu command ──────────────────────────────────────────────────
+    public IRelayCommand ChangeImageCommand { get; }
+
+    public ImageFileNode(Scene scene, SceneListViewModel list)
     {
         _scene = scene;
         _label = GetFilename();
+        ChangeImageCommand = new AsyncRelayCommand(() => list.ChangeSceneImageAsync(scene));
     }
 
     public void RefreshLabel()
@@ -220,7 +248,15 @@ public sealed class MarkerItemNode : SceneTreeNode
     public override Scene?      RelatedScene  => _scene;
     public override MarkerBase? RelatedMarker => Marker;
 
-    public MarkerItemNode(MarkerBase marker, Scene scene) { Marker = marker; _scene = scene; }
+    // ── Context-menu command ──────────────────────────────────────────────────
+    public IRelayCommand DeleteCommand { get; }
+
+    public MarkerItemNode(MarkerBase marker, Scene scene, SceneListViewModel list)
+    {
+        Marker = marker;
+        _scene = scene;
+        DeleteCommand = new RelayCommand(() => list.DeleteMarker(marker, scene));
+    }
 
     private static string Trunc(string s, int max) =>
         s.Length <= max ? s : s[..(max - 1)] + "…";
