@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Dock.Model.Controls;
@@ -57,6 +58,9 @@ public partial class MainWindowViewModel : ViewModelBase
         Layout = DockFactory.CreateLayout();
         DockFactory.InitLayout(Layout);
     }
+
+    /// <summary>Forwards to SceneListViewModel.AddImageCommand for toolbar binding.</summary>
+    public ICommand AddSceneCommand => SceneList.AddImageCommand;
 
     // ── Document operations ───────────────────────────────────────────────────
 

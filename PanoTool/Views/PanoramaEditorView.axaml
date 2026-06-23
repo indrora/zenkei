@@ -34,5 +34,26 @@
       </StackPanel>
     </Border>
 
+    <!-- Marker actions — bottom-left overlay -->
+    <Border HorizontalAlignment="Left" VerticalAlignment="Bottom"
+            Background="#CC181828" CornerRadius="4" Margin="8"
+            Padding="6,4">
+      <StackPanel Orientation="Horizontal" Spacing="4">
+        <TextBlock Text="Add:" Foreground="White" VerticalAlignment="Center"
+                   FontSize="11" Opacity="0.7"/>
+        <Button Command="{Binding AddInfoMarkerCommand}"  Content="Info"
+                Padding="5,1" FontSize="11" ToolTip.Tip="Add Info marker at image centre"/>
+        <Button Command="{Binding AddSceneMarkerCommand}" Content="Scene"
+                Padding="5,1" FontSize="11" ToolTip.Tip="Add Scene Link marker at image centre"/>
+        <Button Command="{Binding AddLinkMarkerCommand}"  Content="Link"
+                Padding="5,1" FontSize="11" ToolTip.Tip="Add URL Link marker at image centre"/>
+        <Separator Width="1" Margin="2,0" Background="#88FFFFFF"
+                   IsVisible="{Binding CanDeleteMarker}"/>
+        <Button Command="{Binding DeleteSelectedMarkerCommand}" Content="Delete"
+                Padding="5,1" FontSize="11" ToolTip.Tip="Delete the selected marker"
+                IsVisible="{Binding CanDeleteMarker}"/>
+      </StackPanel>
+    </Border>
+
   </Grid>
 </UserControl>

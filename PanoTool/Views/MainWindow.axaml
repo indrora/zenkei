@@ -40,6 +40,23 @@
       </MenuItem>
     </Menu>
 
+    <!-- ── Toolbar ──────────────────────────────────────────────────────── -->
+    <Border DockPanel.Dock="Top"
+            Background="{DynamicResource SystemControlBackgroundBaseLowBrush}"
+            BorderBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+            BorderThickness="0,0,0,1" Padding="4,2">
+      <StackPanel Orientation="Horizontal" Spacing="4">
+        <Button Command="{Binding SaveDocumentCommand}" Content="Save"
+                ToolTip.Tip="Save (Ctrl+S)" Padding="8,3"/>
+        <Button Command="{Binding ExportCommand}" Content="Export…"
+                ToolTip.Tip="Export to HTML (Ctrl+E)" Padding="8,3"/>
+        <Separator Width="1" Height="20" Margin="4,0"
+                   Background="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
+        <Button Command="{Binding AddSceneCommand}" Content="Add Scene"
+                ToolTip.Tip="Add a new scene from an image file" Padding="8,3"/>
+      </StackPanel>
+    </Border>
+
     <!-- ── Status bar ────────────────────────────────────────────────────── -->
     <Border DockPanel.Dock="Bottom"
             BorderBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}"

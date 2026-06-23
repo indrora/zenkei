@@ -43,11 +43,44 @@ public partial class PanoramaEditorViewModel : Document
     private bool IsZoomed => PanZoomScale.HasValue;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanDeleteMarker))]
+    [NotifyCanExecuteChangedFor(nameof(DeleteSelectedMarkerCommand))]
     private MarkerBase? _selectedMarker;
 
     partial void OnSelectedMarkerChanged(MarkerBase? value)
     {
         _main.Properties.SetMarker(value, Scene);
+    }
+
+    public bool CanDeleteMarker => SelectedMarker != null && SelectedMarker is not InitialMarker;
+
+    [RelayCommand(CanExecute = nameof(CanDeleteMarker))]
+    private void DeleteSelectedMarker()
+    {
+        if (SelectedMarker == null || SelectedMarker is InitialMarker) return;
+        Scene.Markers.Remove(SelectedMarker);
+        SelectedMarker = null;
+        _main.Properties.SetScene(Scene);
+        _main.MarkDirty();
+    }
+
+    [RelayCommand]
+    private void AddInfoMarker() => AddMarkerAtCenter(new InfoMarker());
+
+    [RelayCommand]
+    private void AddSceneMarker() => AddMarkerAtCenter(new SceneMarker());
+
+    [RelayCommand]
+    private void AddLinkMarker() => AddMarkerAtCenter(new LinkMarker());
+
+    private void AddMarkerAtCenter(MarkerBase marker)
+    {
+        // Place at equator centre — yaw=0 rad, pitch=π/2 rad (dead centre of the image)
+        marker.Coords = new YawPitch(0.0, Math.PI / 2.0);
+        Scene.Markers.Add(marker);
+        SelectedMarker = marker;
+        _main.Properties.SetMarker(marker, Scene);
+        _main.MarkDirty();
     }
 
     /// <summary>
