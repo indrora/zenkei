@@ -1,0 +1,33 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="using:Zenkei.Controls"
+             x:Class="Zenkei.Controls.YawPitchControl">
+
+  <StackPanel Spacing="4">
+
+    <!-- Equirectangular mini-map — drag to place the marker -->
+    <controls:MarkerLocationControl x:Name="Map"/>
+
+    <!-- Yaw NUD row -->
+    <StackPanel Orientation="Horizontal" Spacing="4">
+      <TextBlock Text="Yaw" VerticalAlignment="Center"
+                 Opacity="0.65" FontSize="11" Margin="4,0,0,0"/>
+      <NumericUpDown x:Name="YawNud"
+                     Minimum="-180" Maximum="180" Increment="1"
+                     FormatString="F0" AllowSpin="True" MinWidth="90"
+                     HorizontalAlignment="Stretch"/>
+    </StackPanel>
+
+    <!-- Pitch NUD row -->
+    <StackPanel Orientation="Horizontal" Spacing="4"
+                HorizontalAlignment="Stretch">
+      <TextBlock Text="Pitch" VerticalAlignment="Center"
+                 Opacity="0.65" FontSize="11" Margin="4,0,0,0"/>
+      <NumericUpDown x:Name="PitchNud"
+                     Minimum="0" Maximum="180" Increment="1"
+                     FormatString="F0" AllowSpin="True" MinWidth="90"
+                     HorizontalAlignment="Stretch"/>
+    </StackPanel>
+
+  </StackPanel>
+</UserControl>
