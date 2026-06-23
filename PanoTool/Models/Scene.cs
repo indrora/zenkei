@@ -13,12 +13,18 @@ public class Scene : INotifyPropertyChanged
     private void OnPropertyChanged([CallerMemberName] string? name = null)
         => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 
-    // Scene key in TourDocument.Scenes — not stored in YAML body, not shown in grid
-    [Browsable(false)]
-    public string Id { get; set; } = "";
+    // Scene key in TourDocument.Scenes — not stored in YAML body.
+    // Shown read-only in Properties; rename via right-click.
+    private string _id = "";
+    [Category("Scene"), ReadOnly(true), Description("Scene ID — right-click to rename")]
+    public string Id
+    {
+        get => _id;
+        set { _id = value; OnPropertyChanged(); }
+    }
 
     private string _image = "";
-    [Category("Scene"), ReadOnly(true), Description("Image file path — use the toolbar button to change")]
+    [Category("Scene"), Description("Panorama image path — edit directly or right-click to browse")]
     public string Image { get => _image; set { _image = value; OnPropertyChanged(); } }
 
     private string _title = "";
