@@ -534,4 +534,53 @@ public class PanoramaCanvas : Control
         var (yaw, pitch) = CanvasToCoords(pt);
         AddMarkerRequested?.Invoke(yaw, pitch);
     }
+
+    // ── External zoom API (called by the zoom toolbar) ────────────────────────
+
+    /// <summary>
+    /// Multiplies the current scale by <paramref name="factor"/>, keeping the
+    /// canvas centre pinned to the same image pixel.
+    /// </summary>
+    public void ZoomBy(float factor)
+    {
+        if (_bitmap == null) return;
+        // When in fit mode PanZoomScale is null; compute the fit values first so
+        // _scale/_offX/_offY are meaningful before we multiply.
+        if ((DataContext as PanoramaEditorViewModel)?.PanZoomScale is null)
+            FitToWindow();
+
+        var cx = (float)(Bounds.Width  / 2);
+        var cy = (float)(Bounds.Height / 2);
+        var newScale = _scale * factor;
+        _offX = cx - (cx - _offX) * (newScale / _scale);
+        _offY = cy - (cy - _offY) * (newScale / _scale);
+        _scale = newScale;
+        SaveToDoc();
+        InvalidateVisual();
+    }
+
+    /// <summary>
+    /// Sets an absolute scale (1.0 = one screen pixel per image pixel), centred
+    /// on the middle of the image.
+    /// </summary>
+    public void ZoomAbsolute(float scale)
+    {
+        if (_bitmap == null) return;
+        var cx = (float)(Bounds.Width  / 2);
+        var cy = (float)(Bounds.Height / 2);
+        _scale = scale;
+        _offX  = cx - (_imgW / 2f) * _scale;
+        _offY  = cy - (_imgH / 2f) * _scale;
+        SaveToDoc();
+        InvalidateVisual();
+    }
+
+    /// <summary>Resets to fit-to-window mode (clears the saved zoom state).</summary>
+    public void ZoomFit()
+    {
+        if (DataContext is PanoramaEditorViewModel vm)
+            vm.PanZoomScale = null;
+        FitToWindow();
+        InvalidateVisual();
+    }
 }

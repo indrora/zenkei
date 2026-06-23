@@ -25,6 +25,11 @@ public partial class PanoramaEditorView : UserControl
         canvas.AddMarkerRequested    += OnAddMarkerRequested;
         canvas.MarkerMoved           += OnCanvasMarkerMoved;
         canvas.InitialViewChanged    += OnCanvasInitialViewChanged;
+
+        this.FindControl<Button>("ZoomInBtn")! .Click += (_, _) => canvas.ZoomBy(1.10f);
+        this.FindControl<Button>("ZoomOutBtn")!.Click += (_, _) => canvas.ZoomBy(1f / 1.10f);
+        this.FindControl<Button>("Zoom50Btn")! .Click += (_, _) => canvas.ZoomAbsolute(0.5f);
+        this.FindControl<Button>("Zoom100Btn")!.Click += (_, _) => canvas.ZoomAbsolute(1.0f);
     }
 
     private ContextMenu BuildContextMenu()

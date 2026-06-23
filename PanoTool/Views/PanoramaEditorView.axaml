@@ -12,16 +12,25 @@
         SelectedMarker="{Binding SelectedMarker}"
         />
 
-    <!-- Zoom HUD — top-right overlay, sits above the canvas -->
+    <!-- Zoom toolbar — top-right overlay, sits above the canvas -->
     <Border HorizontalAlignment="Right" VerticalAlignment="Top"
             Background="#CC181828" CornerRadius="4" Margin="8"
-            Padding="6,3">
-      <StackPanel Orientation="Horizontal" Spacing="6">
+            Padding="6,4">
+      <StackPanel Orientation="Horizontal" Spacing="4">
         <TextBlock Text="{Binding ZoomLabel}" Foreground="White"
-                   VerticalAlignment="Center" FontSize="12"/>
-        <Button Content="Fit" Command="{Binding ResetZoomCommand}"
-                Padding="4,1" FontSize="11"
-                ToolTip.Tip="Reset zoom to fit window (also: double-click canvas edge)"/>
+                   VerticalAlignment="Center" FontSize="12"
+                   MinWidth="46" TextAlignment="Right"/>
+        <Button x:Name="ZoomInBtn"  Content="+" FontSize="13" Width="26" Padding="0"
+                ToolTip.Tip="Zoom in (+10%)"/>
+        <Button x:Name="ZoomOutBtn" Content="−" FontSize="13" Width="26" Padding="0"
+                ToolTip.Tip="Zoom out (−10%)"/>
+        <Separator Width="1" Margin="2,0" Background="#88FFFFFF"/>
+        <Button x:Name="Zoom50Btn"  Content="50%"  Padding="5,1" FontSize="11"
+                ToolTip.Tip="Zoom to 50% of native resolution"/>
+        <Button x:Name="Zoom100Btn" Content="100%" Padding="5,1" FontSize="11"
+                ToolTip.Tip="Zoom to native pixel resolution"/>
+        <Button Content="Fit" Command="{Binding ResetZoomCommand}" Padding="5,1" FontSize="11"
+                ToolTip.Tip="Fit image to window"/>
       </StackPanel>
     </Border>
 
