@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Linq;
 using System.Text;
 using System.Text.Json;
 using Zenkei.Models;
@@ -104,15 +105,16 @@ public static class PannellumExporter
             jw.WriteString("panorama", imageMap.GetValueOrDefault(id, ""));
             jw.WriteString("title", scene.Title);
 
-            var (initYaw, initPitch) = RadToPannellum(scene.Initial[0], scene.Initial[1]);
+            var (initYaw, initPitch) = RadToPannellum(scene.Initial.Yaw, scene.Initial.Pitch);
             jw.WriteNumber("yaw", Round(initYaw));
             jw.WriteNumber("pitch", Round(initPitch));
             jw.WriteNumber("hfov", scene.HFov ?? doc.Default.HFov);
 
-            if (scene.Markers.Count > 0)
+            var realMarkers = scene.Markers.Where(m => m is not InitialMarker).ToList();
+            if (realMarkers.Count > 0)
             {
                 jw.WriteStartArray("hotSpots");
-                foreach (var m in scene.Markers)
+                foreach (var m in realMarkers)
                     WriteHotspot(jw, m, doc, iconCssClass);
                 jw.WriteEndArray();
             }
@@ -133,8 +135,8 @@ public static class PannellumExporter
         TourDocument doc,
         Dictionary<string, string> iconCssClass)
     {
-        var coords = m.Coords ?? [0.0, Math.PI / 2];
-        var (yaw, pitch) = RadToPannellum(coords[0], coords[1]);
+        var coords = m.Coords ?? new YawPitch(0.0, Math.PI / 2);
+        var (yaw, pitch) = RadToPannellum(coords.Yaw, coords.Pitch);
 
         jw.WriteStartObject();
         jw.WriteNumber("yaw", Round(yaw));

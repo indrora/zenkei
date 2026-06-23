@@ -1,15 +1,17 @@
 using System.Globalization;
+using System.Linq;
 using System.Text;
 using Zenkei.Models;
 using Zenkei.Models.Markers;
+using YamlDotNet.Core;
 using YamlDotNet.RepresentationModel;
 
 namespace Zenkei.Serialization;
 
 /// <summary>
 /// Loads and saves TourDocument to/from the YAML schema.
-/// Uses YamlDotNet's representation model (node-level) to handle
-/// polymorphic marker lists without requiring a custom type converter.
+/// Uses YamlDotNet's representation model (node-level) for both load and save,
+/// so all quoting, escaping, and multiline string handling is handled by the library.
 /// </summary>
 public static class TourYamlSerializer
 {
@@ -74,10 +76,11 @@ public static class TourYamlSerializer
 
         if (TryGetSequence(node, "initial", out var initialSeq) && initialSeq.Children.Count >= 2)
         {
-            scene.Initial = [
+            // Store radians directly into Coords; bypasses Position.set (which expects degrees).
+            scene.InitialMarker.Coords = new YawPitch(
                 ParseDouble(Scalar(initialSeq.Children[0])),
                 ParseDouble(Scalar(initialSeq.Children[1]))
-            ];
+            );
         }
 
         if (TryGetSequence(node, "markers", out var markersSeq))
@@ -111,10 +114,10 @@ public static class TourYamlSerializer
 
         if (TryGetSequence(node, "coords", out var coordsSeq) && coordsSeq.Children.Count >= 2)
         {
-            marker.Coords = [
+            marker.Coords = new YawPitch(
                 ParseDouble(Scalar(coordsSeq.Children[0])),
                 ParseDouble(Scalar(coordsSeq.Children[1]))
-            ];
+            );
         }
 
         return marker;
@@ -124,73 +127,82 @@ public static class TourYamlSerializer
 
     public static void Save(TourDocument doc, string filePath)
     {
-        var sb = new StringBuilder();
-        sb.AppendLine("information:");
-        sb.AppendLine($"  author: {QuoteString(doc.Information.Author)}");
-        sb.AppendLine($"  title: {QuoteString(doc.Information.Title)}");
-        sb.AppendLine();
-        sb.AppendLine("default:");
-        sb.AppendLine($"  hfov: {F(doc.Default.HFov)}");
-        if (!string.IsNullOrEmpty(doc.Default.FirstScene))
-            sb.AppendLine($"  firstScene: {doc.Default.FirstScene}");
-        sb.AppendLine();
+        var root = new YamlMappingNode();
 
-        sb.AppendLine("scenes:");
+        var info = new YamlMappingNode();
+        info.Add("author", doc.Information.Author ?? "");
+        info.Add("title",  doc.Information.Title  ?? "");
+        root.Add("information", info);
+
+        var defaults = new YamlMappingNode();
+        defaults.Add("hfov", NumNode(doc.Default.HFov));
+        if (!string.IsNullOrEmpty(doc.Default.FirstScene))
+            defaults.Add("firstScene", doc.Default.FirstScene);
+        root.Add("default", defaults);
+
+        var scenesMap = new YamlMappingNode();
         foreach (var (id, scene) in doc.Scenes)
         {
-            sb.AppendLine($"  {id}:");
-            sb.AppendLine($"    image: {scene.Image}");
-            sb.AppendLine($"    title: {QuoteString(scene.Title)}");
+            var sceneMap = new YamlMappingNode();
+            sceneMap.Add("image", scene.Image);
+            sceneMap.Add("title", scene.Title);
             if (!string.IsNullOrEmpty(scene.Description))
-                sb.AppendLine($"    description: {QuoteString(scene.Description)}");
+                sceneMap.Add("description", scene.Description);
             if (scene.HFov.HasValue)
-                sb.AppendLine($"    hfov: {F(scene.HFov.Value)}");
-            sb.AppendLine($"    initial: [{F(scene.Initial[0])}, {F(scene.Initial[1])}]");
+                sceneMap.Add("hfov", NumNode(scene.HFov.Value));
 
-            if (scene.Markers.Count > 0)
+            // initial is in radians (Pannellum format); Scene.Initial.Yaw/Pitch are radians.
+            sceneMap.Add("initial", FlowSeq(NumNode(scene.Initial.Yaw), NumNode(scene.Initial.Pitch)));
+
+            var realMarkers = scene.Markers.Where(m => m is not InitialMarker).ToList();
+            if (realMarkers.Count > 0)
             {
-                sb.AppendLine("    markers:");
-                foreach (var m in scene.Markers)
-                    WriteMarker(sb, m);
+                var markersSeq = new YamlSequenceNode();
+                foreach (var m in realMarkers)
+                    markersSeq.Add(BuildMarkerNode(m));
+                sceneMap.Add("markers", markersSeq);
             }
-        }
 
-        sb.AppendLine();
+            scenesMap.Add(id, sceneMap);
+        }
+        root.Add("scenes", scenesMap);
+
         if (doc.Icons.Count > 0)
         {
-            sb.AppendLine("markers:");
+            var iconsMap = new YamlMappingNode();
             foreach (var (name, path) in doc.Icons)
-                sb.AppendLine($"  {name}: {path}");
+                iconsMap.Add(name, path);
+            root.Add("markers", iconsMap);
         }
 
-        File.WriteAllText(filePath, sb.ToString(), Encoding.UTF8);
+        var yamlStream = new YamlStream(new YamlDocument(root));
+        using var writer = new StreamWriter(filePath, false, Encoding.UTF8);
+        yamlStream.Save(writer, assignAnchors: false);
     }
 
-    private static void WriteMarker(StringBuilder sb, MarkerBase m)
+    private static YamlMappingNode BuildMarkerNode(MarkerBase m)
     {
-        sb.AppendLine($"      - type: {m.Type}");
-        if (m.Coords is { Length: >= 2 })
-            sb.AppendLine($"        coords: [{F(m.Coords[0])}, {F(m.Coords[1])}]");
+        var node = new YamlMappingNode();
+        node.Add("type", m.Type);
+        if (m.Coords.HasValue)
+            node.Add("coords", FlowSeq(NumNode(m.Coords.Value.Yaw), NumNode(m.Coords.Value.Pitch)));
         if (!string.IsNullOrEmpty(m.Marker))
-            sb.AppendLine($"        marker: {m.Marker}");
-
+            node.Add("marker", m.Marker);
         switch (m)
         {
             case LinkMarker lm:
-                sb.AppendLine($"        url: {lm.Url}");
+                node.Add("url", lm.Url);
                 break;
             case InfoMarker im:
-                if (im.Text.Contains('\n'))
-                    sb.AppendLine($"        text: |\n          {im.Text.Replace("\n", "\n          ")}");
-                else
-                    sb.AppendLine($"        text: {QuoteString(im.Text)}");
+                node.Add("text", im.Text ?? "");
                 break;
             case SceneMarker sm:
-                sb.AppendLine($"        scene: {sm.TargetScene}");
+                node.Add("scene", sm.TargetScene);
                 if (!string.IsNullOrEmpty(sm.Text))
-                    sb.AppendLine($"        text: {QuoteString(sm.Text)}");
+                    node.Add("text", sm.Text);
                 break;
         }
+        return node;
     }
 
     // ─── Helpers ─────────────────────────────────────────────────────────────
@@ -237,14 +249,9 @@ public static class TourYamlSerializer
     private static double ParseDouble(string s) =>
         double.TryParse(s, NumberStyles.Any, CultureInfo.InvariantCulture, out var v) ? v : 0;
 
-    private static string F(double v) => v.ToString("G6", CultureInfo.InvariantCulture);
+    private static YamlScalarNode NumNode(double v) =>
+        new(v.ToString("G6", CultureInfo.InvariantCulture));
 
-    private static string QuoteString(string? s)
-    {
-        if (string.IsNullOrEmpty(s)) return "\"\"";
-        // Quote if it contains special YAML chars
-        if (s.Any(c => ":{}[]|>&*!,#?".Contains(c)) || s.StartsWith(' ') || s.EndsWith(' '))
-            return $"\"{s.Replace("\"", "\\\"")}\"";
-        return s;
-    }
+    private static YamlSequenceNode FlowSeq(params YamlNode[] items) =>
+        new(items) { Style = YamlDotNet.Core.Events.SequenceStyle.Flow };
 }

@@ -81,7 +81,7 @@ public partial class PanoramaEditorView : UserControl
             "scene" => new SceneMarker(),
             _       => new InfoMarker()
         };
-        newMarker.Coords = [_pendingYaw, _pendingPitch];
+        newMarker.Coords = new Zenkei.Models.YawPitch(_pendingYaw, _pendingPitch);
 
         vm.Scene.Markers.Add(newMarker);
         vm.SelectedMarker = newMarker;
