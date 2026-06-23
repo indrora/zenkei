@@ -7,40 +7,59 @@ namespace Zenkei.ViewModels;
 
 /// <summary>
 /// Builds the IDE-style dock layout:
-///   ┌──────────────────────────────────────┐
-///   │  Left (Scenes) | Center | Right (Mk) │
-///   ├──────────────────────────────────────┤
-///   │           Output (bottom)            │
-///   └──────────────────────────────────────┘
+///   ┌────────────────────────────────────────────┐
+///   │  Left (List / Props) | Center | Right (Mk) │
+///   ├────────────────────────────────────────────┤
+///   │             Output (bottom)                │
+///   └────────────────────────────────────────────┘
 /// </summary>
 public class DockFactory : Factory
 {
-    private readonly ScenePanelViewModel _scenePanel;
+    private readonly SceneListViewModel _sceneList;
+    private readonly ScenePropertiesViewModel _sceneProperties;
     private readonly MarkerEditorViewModel _markerEditor;
     private readonly OutputViewModel _outputPanel;
 
     private Dock.Model.Controls.IDocumentDock? _documentDock;
 
     public DockFactory(
-        ScenePanelViewModel scenePanel,
+        SceneListViewModel sceneList,
+        ScenePropertiesViewModel sceneProperties,
         MarkerEditorViewModel markerEditor,
         OutputViewModel outputPanel)
     {
-        _scenePanel = scenePanel;
+        _sceneList = sceneList;
+        _sceneProperties = sceneProperties;
         _markerEditor = markerEditor;
         _outputPanel = outputPanel;
     }
 
     public override IRootDock CreateLayout()
     {
-        // Left tool pane — scene browser
-        var leftDock = CreateToolDock();
-        leftDock.Id = "LeftDock";
-        leftDock.Title = "Left";
-        leftDock.Alignment = Alignment.Left;
-        leftDock.Proportion = 0.22;
-        leftDock.VisibleDockables = CreateList<IDockable>(_scenePanel);
-        leftDock.ActiveDockable = _scenePanel;
+        // Left area — two separate ToolDocks stacked vertically so they never tab-merge
+        var sceneListDock = CreateToolDock();
+        sceneListDock.Id = "SceneListDock";
+        sceneListDock.Title = "Scene List";
+        sceneListDock.Alignment = Alignment.Left;
+        sceneListDock.VisibleDockables = CreateList<IDockable>(_sceneList);
+        sceneListDock.ActiveDockable = _sceneList;
+
+        var scenePropsDock = CreateToolDock();
+        scenePropsDock.Id = "ScenePropsDock";
+        scenePropsDock.Title = "Scene Properties";
+        scenePropsDock.Alignment = Alignment.Left;
+        scenePropsDock.VisibleDockables = CreateList<IDockable>(_sceneProperties);
+        scenePropsDock.ActiveDockable = _sceneProperties;
+
+        var leftArea = CreateProportionalDock();
+        leftArea.Id = "LeftArea";
+        leftArea.Title = "Left";
+        leftArea.Orientation = Orientation.Vertical;
+        leftArea.Proportion = 0.22;
+        leftArea.VisibleDockables = CreateList<IDockable>(
+            sceneListDock,
+            CreateProportionalDockSplitter(),
+            scenePropsDock);
 
         // Center document area — panorama editor tabs open here
         var docDock = CreateDocumentDock();
@@ -68,13 +87,13 @@ public class DockFactory : Factory
         bottomDock.VisibleDockables = CreateList<IDockable>(_outputPanel);
         bottomDock.ActiveDockable = _outputPanel;
 
-        // Horizontal split: Left | Center | Right
+        // Horizontal split: Left area | Center | Right
         var mainLayout = CreateProportionalDock();
         mainLayout.Id = "MainLayout";
         mainLayout.Title = "Main";
         mainLayout.Orientation = Orientation.Horizontal;
         mainLayout.VisibleDockables = CreateList<IDockable>(
-            leftDock,
+            leftArea,
             CreateProportionalDockSplitter(),
             docDock,
             CreateProportionalDockSplitter(),
@@ -97,6 +116,17 @@ public class DockFactory : Factory
         root.DefaultDockable = verticalLayout;
         root.ActiveDockable = verticalLayout;
         return root;
+    }
+
+    /// <summary>
+    /// Prevents tool panes from being dragged into the center document area.
+    /// Documents can still be moved freely between document docks.
+    /// </summary>
+    public override void MoveDockable(IDock sourceDock, IDock targetDock, IDockable sourceDockable, IDockable? targetDockable)
+    {
+        if (targetDock is IDocumentDock && sourceDockable is not IDocument)
+            return;
+        base.MoveDockable(sourceDock, targetDock, sourceDockable, targetDockable);
     }
 
     /// <summary>
