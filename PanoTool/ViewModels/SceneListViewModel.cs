@@ -157,6 +157,13 @@ public partial class SceneListViewModel : Tool
                 continue;
             }
 
+            if (IsDuplicateImage(path, projectBaseDir))
+            {
+                await _main.ShowErrorAsync("Duplicate image",
+                    $"Another scene already uses this image:\n{Path.GetFileName(path)}");
+                continue;
+            }
+
             var scene = CreateSceneFromImagePath(imagePath);
             scene.BaseDirectory = projectBaseDir;
             _main.Document.Scenes[scene.Id] = scene;
@@ -200,6 +207,16 @@ public partial class SceneListViewModel : Tool
         catch (ArgumentException ex)
         {
             await _main.ShowErrorAsync("Image rejected", ex.Message);
+            return;
+        }
+
+        var baseDir = _main.Document.FilePath != null
+            ? Path.GetDirectoryName(Path.GetFullPath(_main.Document.FilePath))
+            : null;
+        if (IsDuplicateImage(path, baseDir, excludeScene: scene))
+        {
+            await _main.ShowErrorAsync("Duplicate image",
+                $"Another scene already uses this image:\n{Path.GetFileName(path)}");
             return;
         }
 
@@ -280,6 +297,23 @@ public partial class SceneListViewModel : Tool
     /// </summary>
     public void RefreshSceneNodeLabel(Scene scene) =>
         _scenesFolder?.Find(scene)?.RefreshLabel();
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Returns true if any scene (other than <paramref name="excludeScene"/>) already
+    /// references the same resolved absolute image path as <paramref name="candidatePath"/>.
+    /// </summary>
+    private bool IsDuplicateImage(string candidatePath, string? baseDir, Scene? excludeScene = null)
+    {
+        var resolved = Path.GetFullPath(candidatePath);
+        return _main.Document.Scenes.Values
+            .Where(s => s != excludeScene && !string.IsNullOrEmpty(s.Image))
+            .Select(s => Path.IsPathRooted(s.Image)
+                ? Path.GetFullPath(s.Image)
+                : Path.GetFullPath(Path.Combine(baseDir ?? ".", s.Image)))
+            .Any(r => string.Equals(r, resolved, StringComparison.OrdinalIgnoreCase));
+    }
 
     // ── Static helpers ────────────────────────────────────────────────────────
 
