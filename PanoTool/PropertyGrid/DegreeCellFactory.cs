@@ -1,5 +1,5 @@
 using System;
-using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
@@ -12,13 +12,13 @@ namespace Zenkei.PropertyGrid;
 
 /// <summary>
 /// Renders any property decorated with <see cref="DegreesAttribute"/> as a
-/// NumericUpDown with a "°" suffix, range 1–360, step 1.
+/// NumericUpDown with a "°" suffix.  Min/max default to 1–360 but are overridden
+/// by a <see cref="RangeAttribute"/> on the same property (e.g. [Range(-180, 180)]).
 /// Registered by <see cref="Zenkei.Controls.ZenkeiPropertyGrid"/>.
 /// </summary>
 public class DegreeCellFactory : AbstractCellEditFactory
 {
     // Larger = earlier. Default is 100; NumericCellEditFactory is −9 999 900.
-    // We must run before the numeric catch-all so [Degrees] wins.
     public override int ImportPriority => 1000;
 
     public override Control? HandleNewProperty(PropertyCellContext context)
@@ -26,27 +26,37 @@ public class DegreeCellFactory : AbstractCellEditFactory
         if (!context.Property.Attributes.OfType<DegreesAttribute>().Any())
             return null;
 
+        decimal min = 1m, max = 360m;
+        var rangeAttr = context.Property.Attributes.OfType<RangeAttribute>().FirstOrDefault();
+        if (rangeAttr != null)
+        {
+            try
+            {
+                min = Convert.ToDecimal(rangeAttr.Minimum);
+                max = Convert.ToDecimal(rangeAttr.Maximum);
+            }
+            catch { /* keep defaults */ }
+        }
+
         var nud = new NumericUpDown
         {
-            Minimum = 1,
-            Maximum = 360,
-            Increment = 1,
+            Minimum      = min,
+            Maximum      = max,
+            Increment    = 1,
             FormatString = "F0",
-            AllowSpin = true,
+            AllowSpin    = true,
         };
 
-        // Degree symbol inlined to the right of the spinner text
         nud.SetValue(TextBox.InnerRightContentProperty, new TextBlock
         {
-            Text = "°",
-            Padding = new Thickness(0, 0, 5, 0),
-            Foreground = Brushes.Gray,
+            Text              = "°",
+            Padding           = new Thickness(0, 0, 5, 0),
+            Foreground        = Brushes.Gray,
             VerticalAlignment = VerticalAlignment.Center,
         });
 
         nud.ValueChanged += (_, _) =>
         {
-            // HFov is double? — map decimal? → double?
             double? newValue = nud.Value is { } v ? (double)v : null;
             SetAndRaise(context, nud, newValue, context.GetValue());
         };

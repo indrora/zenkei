@@ -86,8 +86,10 @@ public partial class SceneListViewModel : Tool
                     break;
 
                 case InitialPovNode ipn:
-                    // Shows scene properties (including initial-view NUDs) in Properties.
+                    // Open the scene tab, then override the subject with the
+                    // thin InitialViewSubject (Yaw/Pitch only).
                     SelectedScene = ipn.RelatedScene;
+                    _main.Properties.SetInitialPov(ipn.RelatedScene);
                     break;
 
                 case ImageFileNode ifn:
