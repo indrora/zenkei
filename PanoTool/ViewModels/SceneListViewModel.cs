@@ -17,6 +17,7 @@ public partial class SceneListViewModel : Tool
     private readonly MainWindowViewModel _main;
     private Scene? _subscribedScene;
     private ScenesFolderNode? _scenesFolder;
+    private TourSubject? _tourSubject;
     // Guard against SelectedScene ↔ SelectedTreeNode sync loops.
     private bool _syncingTreeScene;
 
@@ -83,7 +84,8 @@ public partial class SceneListViewModel : Tool
             switch (value)
             {
                 case TourRootNode:
-                    _main.Properties.SetTourInfo(_main.Document.Information);
+                    _tourSubject ??= new TourSubject(_main.Document);
+                    _main.Properties.SetTourSubject(_tourSubject);
                     break;
 
                 case ScenesFolderNode:
@@ -244,6 +246,9 @@ public partial class SceneListViewModel : Tool
             _subscribedScene.PropertyChanged -= OnScenePropertyChanged;
             _subscribedScene = null;
         }
+
+        // Invalidate the cached TourSubject so a fresh one wraps the new document.
+        _tourSubject = null;
 
         Scenes.Clear();
         foreach (var scene in doc.Scenes.Values)

@@ -103,11 +103,8 @@ public sealed class SceneItemNode : SceneTreeNode
         _list  = list;
         _label = scene.Id;
 
-        // Child 0: initial POV, Child 1: image file, then markers
-        Children.Add(new InitialPovNode(scene));
-        Children.Add(new ImageFileNode(scene, list));
-
-        scene.PropertyChanged           += OnScenePropertyChanged;
+        // Only markers are direct children; InitialPovNode and ImageFileNode
+        // are no longer shown in the tree (their data is in the scene Properties).
         scene.Markers.CollectionChanged += OnMarkersChanged;
 
         foreach (var m in scene.Markers)
@@ -123,12 +120,6 @@ public sealed class SceneItemNode : SceneTreeNode
     {
         _label = Scene.Id;
         OnPropertyChanged(nameof(Label));
-    }
-
-    private void OnScenePropertyChanged(object? sender, PropertyChangedEventArgs e)
-    {
-        if (e.PropertyName != nameof(Scene.Image)) return;
-        Children.OfType<ImageFileNode>().FirstOrDefault()?.RefreshLabel();
     }
 
     private void OnMarkersChanged(object? sender, NotifyCollectionChangedEventArgs e)

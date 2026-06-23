@@ -34,6 +34,9 @@ public static class TourYamlSerializer
         {
             if (TryGetDouble(defNode, "hfov", out var hfov))
                 doc.Default.HFov = hfov;
+            var firstScene = GetString(defNode, "firstScene");
+            if (!string.IsNullOrEmpty(firstScene))
+                doc.Default.FirstScene = firstScene;
         }
 
         if (TryGetMapping(root, "markers", out var iconsNode))
@@ -128,6 +131,8 @@ public static class TourYamlSerializer
         sb.AppendLine();
         sb.AppendLine("default:");
         sb.AppendLine($"  hfov: {F(doc.Default.HFov)}");
+        if (!string.IsNullOrEmpty(doc.Default.FirstScene))
+            sb.AppendLine($"  firstScene: {doc.Default.FirstScene}");
         sb.AppendLine();
 
         sb.AppendLine("scenes:");

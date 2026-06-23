@@ -65,34 +65,6 @@
           </StackPanel>
         </TreeDataTemplate>
 
-        <!-- ── Initial POV (leaf) ── -->
-        <DataTemplate x:DataType="vm:InitialPovNode">
-          <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
-            <TextBlock Text="{Binding Icon}"
-                       Foreground="{DynamicResource SystemAccentColorBrush}"
-                       FontSize="11" VerticalAlignment="Center" Opacity="0.8"/>
-            <TextBlock Text="{Binding Label}"
-                       FontSize="11" Opacity="0.75" VerticalAlignment="Center"/>
-          </StackPanel>
-        </DataTemplate>
-
-        <!-- ── Image file (leaf) ── -->
-        <DataTemplate x:DataType="vm:ImageFileNode">
-          <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-            <StackPanel.ContextMenu>
-              <ContextMenu>
-                <MenuItem Header="Change Image…" Command="{Binding ChangeImageCommand}"/>
-              </ContextMenu>
-            </StackPanel.ContextMenu>
-            <Border Width="8" Height="8"
-                    BorderBrush="#666666" BorderThickness="1"
-                    Background="Transparent" VerticalAlignment="Center"/>
-            <TextBlock Text="{Binding Label}"
-                       FontSize="11" Opacity="0.65" FontStyle="Italic"
-                       VerticalAlignment="Center"/>
-          </StackPanel>
-        </DataTemplate>
-
         <!-- ── Marker (leaf) ── -->
         <DataTemplate x:DataType="vm:MarkerItemNode">
           <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
