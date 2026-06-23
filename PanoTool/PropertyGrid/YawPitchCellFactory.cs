@@ -7,9 +7,9 @@ using Zenkei.Models;
 namespace Zenkei.PropertyGrid;
 
 /// <summary>
-/// Renders a <see cref="YawPitch"/> property as a paired Yaw/Pitch control.
+/// Renders a <see cref="YawPitch"/> property as a <see cref="YawPitchControl"/>
+/// (equirectangular mini-map + paired degree NUDs).
 /// Registered by <see cref="ZenkeiPropertyGrid"/>.
-/// Priority is higher than <see cref="DegreeCellFactory"/> so it wins first.
 /// </summary>
 public class YawPitchCellFactory : AbstractCellEditFactory
 {
@@ -21,17 +21,9 @@ public class YawPitchCellFactory : AbstractCellEditFactory
 
         var ctrl = new YawPitchControl();
 
-        void OnNudChanged()
-        {
-            // Ignore the ValueChanged events that SetYawPitch fires internally.
-            if (ctrl.IsUpdating) return;
-            if (ctrl.YawNud.Value is not { } y) return;
-            if (ctrl.PitchNud.Value is not { } p) return;
-            SetAndRaise(context, ctrl, new YawPitch((double)y, (double)p), context.GetValue());
-        }
-
-        ctrl.YawNud.ValueChanged   += (_, _) => OnNudChanged();
-        ctrl.PitchNud.ValueChanged += (_, _) => OnNudChanged();
+        // PositionChanged fires only on user input, never during SetYawPitch.
+        ctrl.PositionChanged += (_, yp) =>
+            SetAndRaise(context, ctrl, yp, context.GetValue());
 
         return ctrl;
     }

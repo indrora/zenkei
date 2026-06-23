@@ -2,49 +2,112 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Zenkei.Models;
 
 namespace Zenkei.Controls;
 
 /// <summary>
-/// Compact control showing paired Yaw and Pitch NumericUpDowns with degree suffixes.
+/// Compact control combining a <see cref="MarkerLocationControl"/> equirectangular
+/// mini-map with paired Yaw/Pitch NumericUpDowns.  Dragging on the map or typing
+/// in the NUDs updates both views in sync.
 /// Used by <see cref="Zenkei.PropertyGrid.YawPitchCellFactory"/> for position properties.
 /// </summary>
 public sealed class YawPitchControl : UserControl
 {
     private bool _updating;
+    private readonly MarkerLocationControl _map;
 
     internal NumericUpDown YawNud   { get; }
     internal NumericUpDown PitchNud { get; }
 
-    /// True while <see cref="SetYawPitch"/> is writing into the NUDs — factory
-    /// ignores ValueChanged events during this window to avoid spurious writes.
-    public bool IsUpdating => _updating;
+    /// <summary>
+    /// Raised whenever the user changes the position — either by dragging the map
+    /// or by editing a NUD.  Not raised during programmatic <see cref="SetYawPitch"/> calls.
+    /// </summary>
+    public event EventHandler<YawPitch>? PositionChanged;
 
     public YawPitchControl()
     {
         YawNud   = MakeDegreeNud(-180, 180);
         PitchNud = MakeDegreeNud(0, 180);
+        _map     = new MarkerLocationControl();
+
+        YawNud.ValueChanged   += (_, _) => OnNudChanged();
+        PitchNud.ValueChanged += (_, _) => OnNudChanged();
+
+        // Sync map drag → NUDs
+        _map.PropertyChanged += (_, e) =>
+        {
+            if (_updating) return;
+            if (e.Property == MarkerLocationControl.YawProperty ||
+                e.Property == MarkerLocationControl.PitchProperty)
+                OnMapChanged();
+        };
 
         Content = new StackPanel
         {
-            Orientation = Orientation.Horizontal,
-            Spacing     = 4,
+            Spacing = 4,
             Children =
             {
-                MakeLabel("Y"),
-                YawNud,
-                MakeLabel("P", leftMargin: 4),
-                PitchNud,
+                _map,
+                new StackPanel
+                {
+                    Orientation = Orientation.Horizontal,
+                    Spacing     = 4,
+                    Children    =
+                    {
+                        MakeLabel("Y"),
+                        YawNud,
+                        MakeLabel("P", leftMargin: 4),
+                        PitchNud,
+                    }
+                }
             }
         };
     }
 
+    /// <summary>
+    /// Sets both the map and the NUDs without raising <see cref="PositionChanged"/>.
+    /// Called by the cell factory to display the current model value.
+    /// </summary>
     public void SetYawPitch(double yaw, double pitch)
     {
-        _updating = true;
+        _updating      = true;
         YawNud.Value   = (decimal)yaw;
         PitchNud.Value = (decimal)pitch;
-        _updating = false;
+        // MarkerLocationControl uses radians
+        _map.Yaw   = yaw   * Math.PI / 180.0;
+        _map.Pitch = pitch * Math.PI / 180.0;
+        _updating  = false;
+    }
+
+    // ── Private helpers ───────────────────────────────────────────────────────
+
+    private void OnNudChanged()
+    {
+        if (_updating) return;
+        if (YawNud.Value is not { } y || PitchNud.Value is not { } p) return;
+
+        // Sync map (without triggering OnMapChanged again)
+        _updating  = true;
+        _map.Yaw   = (double)y * Math.PI / 180.0;
+        _map.Pitch = (double)p * Math.PI / 180.0;
+        _updating  = false;
+
+        PositionChanged?.Invoke(this, new YawPitch((double)y, (double)p));
+    }
+
+    private void OnMapChanged()
+    {
+        // Sync NUDs (without triggering OnNudChanged again)
+        _updating      = true;
+        YawNud.Value   = (decimal)(_map.Yaw   * 180.0 / Math.PI);
+        PitchNud.Value = (decimal)(_map.Pitch * 180.0 / Math.PI);
+        _updating      = false;
+
+        PositionChanged?.Invoke(this, new YawPitch(
+            _map.Yaw   * 180.0 / Math.PI,
+            _map.Pitch * 180.0 / Math.PI));
     }
 
     private static NumericUpDown MakeDegreeNud(decimal min, decimal max)
