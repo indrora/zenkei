@@ -1,7 +1,5 @@
 using System.ComponentModel;
-using System.ComponentModel.DataAnnotations;
 using System.Runtime.CompilerServices;
-using Zenkei.PropertyGrid;
 
 namespace Zenkei.Models.Markers;
 
@@ -13,52 +11,37 @@ public abstract class MarkerBase : INotifyPropertyChanged
         => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 
     /// <summary>
-    /// Fires PropertyChanged for Coords, Yaw, and Pitch so the canvas and
-    /// PropertyGrid both refresh after direct Coords[] mutations.
+    /// Fires PropertyChanged for Coords and Position so the canvas and
+    /// PropertyGrid both refresh after direct Coords[] mutations (e.g. drag).
     /// </summary>
     internal void NotifyCoordsChanged()
     {
         OnPropertyChanged(nameof(Coords));
-        OnPropertyChanged(nameof(Yaw));
-        OnPropertyChanged(nameof(Pitch));
+        OnPropertyChanged(nameof(Position));
     }
 
     [Browsable(false)]
     public abstract string Type { get; }
 
-    // Raw radian array — not shown in PropertyGrid; Yaw/Pitch expose it as degrees
+    // Raw radian array — serialised to YAML; Position exposes it in degrees.
     [Browsable(false)]
     public double[]? Coords { get; set; }
 
-    // Position in degrees, computed from Coords[].  Shown in PropertyGrid via
-    // DegreeCellFactory and usable for drag-sync via NotifyCoordsChanged.
-    [Degrees]
-    [Range(-180.0, 180.0)]
-    [Category("Position"), Description("Yaw in degrees (-180 … 180)")]
-    public double Yaw
-    {
-        get => (Coords?[0] ?? 0) * 180.0 / Math.PI;
-        set
-        {
-            if (Coords is { Length: >= 2 })
-            {
-                Coords[0] = value * Math.PI / 180.0;
-                OnPropertyChanged();
-            }
-        }
-    }
+    // ── Position as combined Yaw/Pitch (degrees) ───────────────────────────────
+    // Rendered by YawPitchCellFactory + YawPitchControl in the PropertyGrid.
 
-    [Degrees]
-    [Range(0.0, 180.0)]
-    [Category("Position"), Description("Pitch in degrees (0 = top, 180 = bottom)")]
-    public double Pitch
+    [Category("Position"), Description("Yaw and pitch in degrees")]
+    public YawPitch Position
     {
-        get => (Coords?[1] ?? Math.PI / 2) * 180.0 / Math.PI;
+        get => new(
+            (Coords?[0] ?? 0) * 180.0 / Math.PI,
+            (Coords?[1] ?? Math.PI / 2) * 180.0 / Math.PI);
         set
         {
             if (Coords is { Length: >= 2 })
             {
-                Coords[1] = value * Math.PI / 180.0;
+                Coords[0] = value.Yaw   * Math.PI / 180.0;
+                Coords[1] = value.Pitch * Math.PI / 180.0;
                 OnPropertyChanged();
             }
         }

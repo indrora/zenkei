@@ -1,14 +1,13 @@
 using System.ComponentModel;
-using System.ComponentModel.DataAnnotations;
 using System.Runtime.CompilerServices;
-using Zenkei.PropertyGrid;
 
 namespace Zenkei.Models;
 
 /// <summary>
-/// Lightweight PropertyGrid subject shown when the "Initial POV" tree node is
-/// selected.  Wraps Scene.Initial[] (radians) and exposes Yaw/Pitch in degrees.
-/// No other properties — intentionally minimal.
+/// Lightweight PropertyGrid subject shown when the initial viewpoint is selected
+/// (e.g. via canvas click on the POV indicator).
+/// Wraps Scene.Initial[] (radians) and exposes Yaw/Pitch via a combined
+/// <see cref="YawPitch"/> property rendered by YawPitchCellFactory.
 /// </summary>
 public sealed class InitialViewSubject : INotifyPropertyChanged
 {
@@ -18,33 +17,24 @@ public sealed class InitialViewSubject : INotifyPropertyChanged
 
     public InitialViewSubject(Scene scene) => Scene = scene;
 
-    [Degrees]
-    [Range(-180.0, 180.0)]
-    [Category("Position"), Description("Yaw of initial view in degrees (-180 … 180)")]
-    public double Yaw
+    [Category("Position"), Description("Yaw and pitch of the initial view in degrees")]
+    public YawPitch Position
     {
-        get => Scene.Initial[0] * 180.0 / Math.PI;
-        set { Scene.Initial[0] = value * Math.PI / 180.0; Notify(); }
-    }
-
-    [Degrees]
-    [Range(0.0, 180.0)]
-    [Category("Position"), Description("Pitch of initial view in degrees (0 = top, 180 = bottom)")]
-    public double Pitch
-    {
-        get => Scene.Initial[1] * 180.0 / Math.PI;
-        set { Scene.Initial[1] = value * Math.PI / 180.0; Notify(); }
+        get => new(Scene.Initial[0] * 180.0 / Math.PI,
+                   Scene.Initial[1] * 180.0 / Math.PI);
+        set
+        {
+            Scene.Initial[0] = value.Yaw   * Math.PI / 180.0;
+            Scene.Initial[1] = value.Pitch * Math.PI / 180.0;
+            Notify();
+        }
     }
 
     /// <summary>
     /// Called by PropertiesViewModel.SyncInitialView when the canvas drag updates
     /// Scene.Initial[] directly, so the PropertyGrid display stays current.
     /// </summary>
-    internal void NotifyPositionChanged()
-    {
-        Notify(nameof(Yaw));
-        Notify(nameof(Pitch));
-    }
+    internal void NotifyPositionChanged() => Notify(nameof(Position));
 
     private void Notify([CallerMemberName] string? name = null)
         => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
