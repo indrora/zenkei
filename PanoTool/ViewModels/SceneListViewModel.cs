@@ -94,6 +94,10 @@ public partial class SceneListViewModel : Tool
 
                 case SceneItemNode sn:
                     SelectedScene = sn.Scene;
+                    // Directly update Properties in case SelectedScene didn't change
+                    // (OnSelectedSceneChanged is skipped when the value is the same,
+                    // e.g. user was viewing a marker and then re-selects the scene node).
+                    _main.Properties.SetScene(sn.Scene);
                     break;
 
                 case InitialPovNode ipn:
