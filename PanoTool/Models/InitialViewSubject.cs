@@ -20,12 +20,12 @@ public sealed class InitialViewSubject : INotifyPropertyChanged
     [Category("Position"), Description("Yaw and pitch of the initial view in degrees")]
     public YawPitch Position
     {
-        get => new(Scene.Initial[0] * 180.0 / Math.PI,
-                   Scene.Initial[1] * 180.0 / Math.PI);
+        get => new(Scene.Initial.Yaw   * 180.0 / Math.PI,
+                   Scene.Initial.Pitch * 180.0 / Math.PI);
         set
         {
-            Scene.Initial[0] = value.Yaw   * Math.PI / 180.0;
-            Scene.Initial[1] = value.Pitch * Math.PI / 180.0;
+            Scene.Initial = new YawPitch(value.Yaw   * Math.PI / 180.0,
+                                         value.Pitch * Math.PI / 180.0);
             Notify();
         }
     }

@@ -25,7 +25,7 @@ public abstract class MarkerBase : INotifyPropertyChanged
 
     // Raw radian array — serialised to YAML; Position exposes it in degrees.
     [Browsable(false)]
-    public double[]? Coords { get; set; }
+    public YawPitch? Coords { get; set; }
 
     // ── Position as combined Yaw/Pitch (degrees) ───────────────────────────────
     // Rendered by YawPitchCellFactory + YawPitchControl in the PropertyGrid.
@@ -33,17 +33,17 @@ public abstract class MarkerBase : INotifyPropertyChanged
     [Category("Position"), Description("Yaw and pitch in degrees")]
     public YawPitch Position
     {
-        get => new(
-            (Coords?[0] ?? 0) * 180.0 / Math.PI,
-            (Coords?[1] ?? Math.PI / 2) * 180.0 / Math.PI);
+        get => Coords.HasValue
+            ? new YawPitch(Coords.Value.Yaw   * 180.0 / Math.PI,
+                           Coords.Value.Pitch * 180.0 / Math.PI)
+            : new YawPitch(0.0, 0.0);
         set
         {
-            if (Coords is { Length: >= 2 })
-            {
-                Coords[0] = value.Yaw   * Math.PI / 180.0;
-                Coords[1] = value.Pitch * Math.PI / 180.0;
-                OnPropertyChanged();
-            }
+            Coords = new YawPitch(
+                value.Yaw   * Math.PI / 180.0,
+                value.Pitch * Math.PI / 180.0);
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(Coords));
         }
     }
 

@@ -48,9 +48,34 @@ public class Scene : INotifyPropertyChanged
             ? Image
             : Path.Combine(BaseDirectory, Image);
 
-    // [yaw_rad, pitch_from_top_rad] — edited via NumericUpDowns in the scene panel, not the grid
+    // Radians — read/written by the canvas and serializer; degrees accessed via InitialViewSubject.
     [Browsable(false)]
-    public double[] Initial { get; set; } = [0.0, Math.PI / 2];
+    public YawPitch Initial
+    {
+        get => InitialMarker.Coords ?? new YawPitch(0, 0);
+        set { InitialMarker.Coords = value; InitialMarker.NotifyCoordsChanged(); OnPropertyChanged(); }
+    }
+
+    public InitialMarker InitialMarker
+    {
+        get
+        {
+            var existing = Markers.OfType<InitialMarker>().FirstOrDefault();
+            if (existing == null)
+            {
+                existing = new InitialMarker();
+                Markers.Add(existing);
+            }
+            return existing;
+        } 
+        set
+        {
+            var existing = Markers.OfType<InitialMarker>().FirstOrDefault();
+            if (existing != null)
+                Markers.Remove(existing);
+            Markers.Add(value);
+        }
+    }
 
     private double? _hFov;
     [Degrees]

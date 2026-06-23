@@ -247,15 +247,15 @@ public class PanoramaCanvas : Control
             foreach (var m in Scene.Markers.ToList())
                 DrawMarker(context, m, m == SelectedMarker);
 
-            var (cx, cy) = CoordsToCanvas(Scene.Initial[0], Scene.Initial[1]);
+            var (cx, cy) = CoordsToCanvas(Scene.Initial.Yaw, Scene.Initial.Pitch);
             DrawInitialMarker(context, cx, cy);
         }
     }
 
     private void DrawMarker(DrawingContext context, MarkerBase m, bool selected)
     {
-        if (m.Coords is not { Length: >= 2 }) return;
-        var (cx, cy) = CoordsToCanvas(m.Coords[0], m.Coords[1]);
+        if (m is InitialMarker || !m.Coords.HasValue) return;
+        var (cx, cy) = CoordsToCanvas(m.Coords.Value.Yaw, m.Coords.Value.Pitch);
         var center = new Point(cx, cy);
 
         var (fill, border) = m switch
@@ -333,8 +333,8 @@ public class PanoramaCanvas : Control
         if (Scene == null) return null;
         foreach (var m in Scene.Markers)
         {
-            if (m.Coords is not { Length: >= 2 }) continue;
-            var (cx, cy) = CoordsToCanvas(m.Coords[0], m.Coords[1]);
+            if (m is InitialMarker || !m.Coords.HasValue) continue;
+            var (cx, cy) = CoordsToCanvas(m.Coords.Value.Yaw, m.Coords.Value.Pitch);
             var dx = (float)pt.X - cx;
             var dy = (float)pt.Y - cy;
             if (dx * dx + dy * dy <= HitRadius * HitRadius) return m;
@@ -413,7 +413,7 @@ public class PanoramaCanvas : Control
                 // Check for initial-viewpoint drag (only when no marker is hit)
                 if (Scene != null && _bitmap != null)
                 {
-                    var (icx, icy) = CoordsToCanvas(Scene.Initial[0], Scene.Initial[1]);
+                    var (icx, icy) = CoordsToCanvas(Scene.Initial.Yaw, Scene.Initial.Pitch);
                     var idx = (float)pt.X - icx;
                     var idy = (float)pt.Y - icy;
                     if (idx * idx + idy * idy <= InitialHitRadius * InitialHitRadius)
@@ -449,15 +449,14 @@ public class PanoramaCanvas : Control
         if (_draggingInitial && Scene != null)
         {
             var (yaw, pitch) = CanvasToCoords(pt);
-            Scene.Initial[0] = yaw;
-            Scene.Initial[1] = pitch;
+            Scene.Initial = new YawPitch(yaw, pitch);
             InitialViewChanged?.Invoke(yaw, pitch);
             InvalidateVisual();
             return;
         }
 
         // Marker drag
-        if (_dragging?.Coords is { Length: >= 2 })
+        if (_dragging != null && _dragging.Coords.HasValue)
         {
             var dx = pt.X - _dragStart.X;
             var dy = pt.Y - _dragStart.Y;
@@ -466,8 +465,7 @@ public class PanoramaCanvas : Control
             if (_dragMoved)
             {
                 var (yaw, pitch) = CanvasToCoords(pt);
-                _dragging.Coords[0] = yaw;
-                _dragging.Coords[1] = pitch;
+                _dragging.Coords = new YawPitch(yaw, pitch);
                 MarkerMoved?.Invoke(_dragging, yaw, pitch);
                 InvalidateVisual();
             }
@@ -505,6 +503,10 @@ public class PanoramaCanvas : Control
         if (e.PropertyName == nameof(Scene.Image))
         {
             LoadSceneImage();
+            InvalidateVisual();
+        }
+        else if (e.PropertyName == nameof(Scene.Initial))
+        {
             InvalidateVisual();
         }
     }

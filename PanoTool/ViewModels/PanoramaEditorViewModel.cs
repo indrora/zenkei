@@ -94,8 +94,7 @@ public partial class PanoramaEditorViewModel : Document
     /// <summary>Relay from canvas InitialViewChanged — syncs the Properties panel display.</summary>
     public void OnInitialViewChanged(double yaw, double pitch)
     {
-        Scene.Initial[0] = yaw;
-        Scene.Initial[1] = pitch;
+        // Scene.Initial is already updated by the canvas before this event fires.
         _main.Properties.SyncInitialView(yaw, pitch);
         _main.MarkDirty();
     }
