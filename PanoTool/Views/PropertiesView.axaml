@@ -15,7 +15,7 @@
                HorizontalAlignment="Center" VerticalAlignment="Center"/>
 
     <!-- PropertyGrid fills the panel; null DataContext renders as an empty grid -->
-    <controls:ZenkeiPropertyGrid Grid.Row="0" DataContext="{Binding Subject}"/>
+    <controls:ZenkeiPropertyGrid x:Name="PropGrid" Grid.Row="0" DataContext="{Binding Subject}"/>
 
     <!-- Delete button — visible only when a real marker is selected -->
     <Button Grid.Row="1"

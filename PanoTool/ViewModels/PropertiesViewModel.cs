@@ -42,6 +42,12 @@ public partial class PropertiesViewModel : Tool
         CanFloat = true;
     }
 
+    /// <summary>
+    /// Live scene-ID collection for <see cref="Zenkei.Controls.ZenkeiPropertyGrid.SceneNames"/>.
+    /// Returns null when no document is open.
+    /// </summary>
+    public IEnumerable<string>? DocumentSceneNames => _main.Document?.Scenes.Keys;
+
     // ── Public subject API ────────────────────────────────────────────────────
 
     /// <summary>Shows tour-level metadata (title, author, defaults) for the root node.</summary>
