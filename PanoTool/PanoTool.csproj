@@ -29,6 +29,8 @@
     </PackageReference>
     <PackageReference Include="bodong.Avalonia.PropertyGrid" Version="12.0.4.1" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.1" />
+    <PackageReference Include="Devolutions.AvaloniaTheme.DevExpress" Version="2026.6.23" />
+    <PackageReference Include="Devolutions.AvaloniaTheme.MacOS" Version="2026.6.23" />
     <PackageReference Include="Dock.Avalonia" Version="12.0.0.2" />
     <PackageReference Include="Dock.Avalonia.Themes.Fluent" Version="12.0.0.2" />
     <PackageReference Include="Dock.Model.Mvvm" Version="12.0.0.2" />
