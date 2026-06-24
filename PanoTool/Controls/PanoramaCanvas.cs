@@ -137,22 +137,21 @@ public class PanoramaCanvas : Control
         var path = Scene?.ResolvedImagePath;
         if (path == _loadedImagePath) return;
         _loadedImagePath = path;
-        _bitmap?.Dispose();
+        // BitmapCache owns bitmap lifetime; GC + finalizer reclaim native memory when unreferenced.
         _bitmap = null;
         _imgW = _imgH = 0;
 
-        if (!string.IsNullOrEmpty(path) && File.Exists(path))
+        if (!string.IsNullOrEmpty(path))
         {
-            try
+            _bitmap = BitmapCache.Get(path);
+            if (_bitmap != null)
             {
-                _bitmap = new Bitmap(path);
                 _imgW = _bitmap.PixelSize.Width;
                 _imgH = _bitmap.PixelSize.Height;
                 // Restore from doc (which may call FitToWindow if PanZoomScale is null).
                 // Returns early if the control isn't sized yet; OnSizeChanged handles it.
                 RestoreFromDoc();
             }
-            catch { /* ignore bad images */ }
         }
     }
 

@@ -3,6 +3,7 @@ using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Dock.Model.Mvvm.Controls;
+using Zenkei.Controls;
 using Zenkei.Models;
 using Zenkei.Models.Markers;
 
@@ -260,6 +261,11 @@ public partial class SceneListViewModel : Tool
                 $"Another scene already uses this image:\n{Path.GetFileName(path)}");
             return;
         }
+
+        // Invalidate before overwriting so the old cached thumbnail is freed promptly.
+        var oldResolved = scene.ResolvedImagePath;
+        if (!string.IsNullOrEmpty(oldResolved))
+            BitmapCache.Invalidate(oldResolved);
 
         scene.Image = imagePath;
         scene.BaseDirectory = _main.Document.FilePath != null
