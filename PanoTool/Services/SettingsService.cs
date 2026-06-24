@@ -21,9 +21,6 @@ public static class SettingsService
 
     public static AppSettings Current { get; private set; } = new();
 
-    // Tracks the currently injected extra theme so we can remove it by reference.
-    private static IStyle? _extraTheme;
-
     public static void Load()
     {
         try
@@ -66,30 +63,24 @@ public static class SettingsService
     /// DockFluentTheme stays in App.axaml always — dock chrome always looks Fluent.
     /// Cupertino (MacOS) and DevExpress layers are added/removed dynamically on top.
     /// </summary>
+    /// <summary>
+    /// Applies Look &amp; Feel at startup only; Look &amp; Feel changes at runtime
+    /// require a restart (handled by SettingsWindow).
+    /// </summary>
     public static void ApplyLookAndFeel()
     {
         if (Application.Current == null) return;
         var styles = Application.Current.Styles;
 
-        // Remove the previously injected extra theme by reference.
-        if (_extraTheme != null)
+        IStyle? theme = Current.LookAndFeel switch
         {
-            styles.Remove(_extraTheme);
-            _extraTheme = null;
-        }
+            LookAndFeel.Cupertino  => InitTheme(new DevolutionsMacOsTheme()),
+            LookAndFeel.DevExpress => InitTheme(new DevolutionsDevExpressTheme()),
+            _                      => null,
+        };
 
-        switch (Current.LookAndFeel)
-        {
-            case LookAndFeel.Cupertino:
-                _extraTheme = InitTheme(new DevolutionsMacOsTheme());
-                styles.Add(_extraTheme);
-                break;
-            case LookAndFeel.DevExpress:
-                _extraTheme = InitTheme(new DevolutionsDevExpressTheme());
-                styles.Add(_extraTheme);
-                break;
-            // Fluent: existing FluentTheme + DockFluentTheme cover it; nothing extra needed.
-        }
+        if (theme != null)
+            styles.Add(theme);
     }
 
     // Devolutions themes implement ISupportInitialize; their embedded AXAML styles are
