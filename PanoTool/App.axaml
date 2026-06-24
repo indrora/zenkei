@@ -28,6 +28,7 @@
 
     <Application.Styles>
         <FluentTheme />
+        
         <dockFluent:DockFluentTheme/>
 
         <!-- Two-part tab header for document tabs: bold internal ID + subdued title words.

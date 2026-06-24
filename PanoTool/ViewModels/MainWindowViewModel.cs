@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Windows.Input;
+using Avalonia.Xaml.Interactions.Core;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Dock.Model.Controls;
@@ -62,6 +63,13 @@ public partial class MainWindowViewModel : ViewModelBase
 
     /// <summary>Forwards to SceneListViewModel.AddImageCommand for toolbar binding.</summary>
     public ICommand AddSceneCommand => SceneList.AddImageCommand;
+    public ICommand RemoveSceneCommand => SceneList.RemoveSceneCommand;
+
+
+    public ICommand ZoomFitCommand => new RelayCommand(() =>
+    {
+        
+    });
 
     [RelayCommand]
     private async Task OpenSettings() =>
@@ -123,6 +131,8 @@ public partial class MainWindowViewModel : ViewModelBase
     private async Task ExportAsync()
     {
         var outDir = await SaveFilePicker("Export to folder (choose any file in target folder)", []);
+        
+
         if (outDir == null) return;
         outDir = Path.GetDirectoryName(outDir) ?? outDir;
         try

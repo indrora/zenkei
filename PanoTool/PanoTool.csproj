@@ -8,7 +8,12 @@
     <RootNamespace>Zenkei</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>Assets\zenkei.ico</ApplicationIcon>
-    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    <AvaloniaUseCompiledBindingsByDefault>false</AvaloniaUseCompiledBindingsByDefault>
+    <!-- MC3073: false positive — Avalonia's binding validator (a source generator) can't see
+         CommunityToolkit.Mvvm's generated commands. XamlIL (post-compile) sees them fine. -->
+    <NoWarn>$(NoWarn);MC3073</NoWarn>
+    <!-- Write source-generator output to disk so VS Code can navigate to generated members -->
+    <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
   </PropertyGroup>
 
   <ItemGroup>
@@ -16,6 +21,12 @@
     <!-- Pannellum viewer assets shipped alongside the binary -->
     <Content Include="Assets\Viewer\**" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
+
+
+
+  <PropertyGroup>
+    <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+  </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Avalonia" Version="12.0.4" />
