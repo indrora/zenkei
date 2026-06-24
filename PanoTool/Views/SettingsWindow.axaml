@@ -1,0 +1,57 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Zenkei.ViewModels"
+        x:Class="Zenkei.Views.SettingsWindow"
+        x:DataType="vm:SettingsViewModel"
+        Title="Preferences"
+        Width="440" Height="290"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False"
+        ShowInTaskbar="False">
+
+  <Window.Styles>
+    <Style Selector="TextBlock.SectionHeader">
+      <Setter Property="FontWeight" Value="SemiBold"/>
+      <Setter Property="Margin" Value="0,12,0,4"/>
+    </Style>
+  </Window.Styles>
+
+  <StackPanel Spacing="4" Margin="24,20,24,20">
+
+    <!-- Appearance -->
+    <TextBlock Text="Appearance" Classes="SectionHeader"/>
+    <Grid ColumnDefinitions="130,*" RowDefinitions="Auto,8,Auto">
+      <TextBlock Grid.Row="0" Grid.Column="0" Text="Theme:" VerticalAlignment="Center"/>
+      <ComboBox Grid.Row="0" Grid.Column="1"
+                ItemsSource="{Binding ThemeVariants}"
+                SelectedItem="{Binding ThemeVariant}"
+                HorizontalAlignment="Stretch"/>
+      <TextBlock Grid.Row="2" Grid.Column="0" Text="Look &amp; Feel:" VerticalAlignment="Center"/>
+      <ComboBox Grid.Row="2" Grid.Column="1"
+                ItemsSource="{Binding LookAndFeels}"
+                SelectedItem="{Binding LookAndFeel}"
+                HorizontalAlignment="Stretch"/>
+    </Grid>
+
+    <!-- Performance -->
+    <TextBlock Text="Performance" Classes="SectionHeader"/>
+    <Grid ColumnDefinitions="130,*">
+      <TextBlock Grid.Column="0" Text="Thumbnail max width:" VerticalAlignment="Center"/>
+      <NumericUpDown Grid.Column="1"
+                     Value="{Binding BitmapCacheMaxWidth}"
+                     Minimum="256" Maximum="8192" Increment="256"
+                     FormatString="0"
+                     HorizontalAlignment="Stretch"/>
+    </Grid>
+    <TextBlock Text="Applies to images opened after changing this value."
+               FontSize="11" Opacity="0.6" Margin="0,2,0,0"/>
+
+    <!-- Buttons -->
+    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right"
+                Spacing="8" Margin="0,16,0,0">
+      <Button Content="OK" IsDefault="True" MinWidth="80" Click="OnOkClick"/>
+      <Button Content="Cancel" IsCancel="True" MinWidth="80" Click="OnCancelClick"/>
+    </StackPanel>
+
+  </StackPanel>
+</Window>
