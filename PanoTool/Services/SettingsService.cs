@@ -1,5 +1,5 @@
+using System.ComponentModel;
 using System.IO;
-using System.Linq;
 using System.Text.Json;
 using Avalonia;
 using Avalonia.Styling;
@@ -20,6 +20,9 @@ public static class SettingsService
         "Zenkei", "settings.json");
 
     public static AppSettings Current { get; private set; } = new();
+
+    // Tracks the currently injected extra theme so we can remove it by reference.
+    private static IStyle? _extraTheme;
 
     public static void Load()
     {
@@ -68,21 +71,34 @@ public static class SettingsService
         if (Application.Current == null) return;
         var styles = Application.Current.Styles;
 
-        // Remove any previously injected extra theme, preserving FluentTheme + DockFluentTheme.
-        var toRemove = styles
-            .Where(s => s is DevolutionsMacOsTheme or DevolutionsDevExpressTheme)
-            .ToList();
-        foreach (var s in toRemove) styles.Remove(s);
+        // Remove the previously injected extra theme by reference.
+        if (_extraTheme != null)
+        {
+            styles.Remove(_extraTheme);
+            _extraTheme = null;
+        }
 
         switch (Current.LookAndFeel)
         {
             case LookAndFeel.Cupertino:
-                styles.Add(new DevolutionsMacOsTheme());
+                _extraTheme = InitTheme(new DevolutionsMacOsTheme());
+                styles.Add(_extraTheme);
                 break;
             case LookAndFeel.DevExpress:
-                styles.Add(new DevolutionsDevExpressTheme());
+                _extraTheme = InitTheme(new DevolutionsDevExpressTheme());
+                styles.Add(_extraTheme);
                 break;
             // Fluent: existing FluentTheme + DockFluentTheme cover it; nothing extra needed.
         }
+    }
+
+    // Devolutions themes implement ISupportInitialize; their embedded AXAML styles are
+    // only added to the Styles collection inside EndInit() — calling new T() alone
+    // produces an empty Styles object and nothing is applied at runtime.
+    private static T InitTheme<T>(T theme) where T : ISupportInitialize, IStyle
+    {
+        theme.BeginInit();
+        theme.EndInit();
+        return theme;
     }
 }
