@@ -202,9 +202,12 @@ public class PanoramaCanvas : Control
     private void SaveToDoc()
     {
         if (DataContext is not PanoramaEditorViewModel vm) return;
-        vm.PanZoomScale = _scale;
+        // Offsets must be written before Scale: setting Scale fires OnVmPropertyChanged
+        // → RestoreFromDoc(), which reads OffX/OffY. If Scale were written first, the
+        // restore would read stale offset values and undo the zoom anchor calculation.
         vm.PanZoomOffX  = _offX;
         vm.PanZoomOffY  = _offY;
+        vm.PanZoomScale = _scale;
     }
 
     protected override void OnSizeChanged(SizeChangedEventArgs e)
@@ -365,13 +368,12 @@ public class PanoramaCanvas : Control
     protected override void OnPointerWheelChanged(PointerWheelEventArgs e)
     {
         base.OnPointerWheelChanged(e);
+        if (_bitmap == null) return;
+        if ((DataContext as PanoramaEditorViewModel)?.PanZoomScale is null)
+            FitToWindow();
         var factor = e.Delta.Y > 0 ? 1.15f : 1f / 1.15f;
-        var mx = (float)e.GetPosition(this).X;
-        var my = (float)e.GetPosition(this).Y;
-        var oldScale = _scale;
-        _scale = Math.Clamp(_scale * factor, 0.1f, 20f);
-        _offX = mx - (mx - _offX) * (_scale / oldScale);
-        _offY = my - (my - _offY) * (_scale / oldScale);
+        var pos = e.GetPosition(this);
+        ApplyZoom(factor, (float)pos.X, (float)pos.Y);
         SaveToDoc();
         InvalidateVisual();
     }
@@ -534,6 +536,22 @@ public class PanoramaCanvas : Control
         AddMarkerRequested?.Invoke(yaw, pitch);
     }
 
+    // ── Zoom helpers ──────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Applies a zoom factor anchored at (anchorX, anchorY) in canvas coordinates.
+    /// The image point under the anchor stays fixed on screen.
+    /// Scale is clamped to [0.1, 20].
+    /// </summary>
+    private void ApplyZoom(float factor, float anchorX, float anchorY)
+    {
+        var oldScale = _scale;
+        _scale = Math.Clamp(_scale * factor, 0.1f, 20f);
+        var actualFactor = _scale / oldScale;
+        _offX = anchorX - (anchorX - _offX) * actualFactor;
+        _offY = anchorY - (anchorY - _offY) * actualFactor;
+    }
+
     // ── External zoom API (called by the zoom toolbar) ────────────────────────
 
     /// <summary>
@@ -548,12 +566,7 @@ public class PanoramaCanvas : Control
         if ((DataContext as PanoramaEditorViewModel)?.PanZoomScale is null)
             FitToWindow();
 
-        var cx = (float)(Bounds.Width  / 2);
-        var cy = (float)(Bounds.Height / 2);
-        var newScale = _scale * factor;
-        _offX = cx - (cx - _offX) * (newScale / _scale);
-        _offY = cy - (cy - _offY) * (newScale / _scale);
-        _scale = newScale;
+        ApplyZoom(factor, (float)(Bounds.Width / 2), (float)(Bounds.Height / 2));
         SaveToDoc();
         InvalidateVisual();
     }
