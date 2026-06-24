@@ -103,10 +103,8 @@ public partial class SceneListViewModel : Tool
                     break;
 
                 case InitialPovNode ipn:
-                    // Open the scene tab, then override the subject with the
-                    // thin InitialViewSubject (Yaw/Pitch only).
                     SelectedScene = ipn.RelatedScene;
-                    _main.Properties.SetInitialPov(ipn.RelatedScene);
+                    _main.Properties.SetScene(ipn.RelatedScene);
                     break;
 
                 case ImageFileNode ifn:

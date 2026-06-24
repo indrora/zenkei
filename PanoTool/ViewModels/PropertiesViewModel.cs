@@ -11,22 +11,20 @@ namespace Zenkei.ViewModels;
 /// <see cref="Zenkei.Controls.ZenkeiPropertyGrid"/> in PropertiesView.
 ///
 /// Selection pipeline:
-///   TourRootNode      → SetTourSubject(TourSubject)       → Subject = TourSubject
-///   ScenesFolderNode  → SetScene(null)                    → Subject = null
-///   SceneItemNode     → SetScene(scene)                   → Subject = scene
-///   InitialPovNode /
-///   canvas POV click  → SetInitialPov(scene)              → Subject = InitialViewSubject
+///   TourRootNode      → SetTourSubject(TourSubject)  → Subject = TourSubject
+///   ScenesFolderNode  → SetScene(null)               → Subject = null
+///   SceneItemNode     → SetScene(scene)              → Subject = scene
+///   canvas POV drag   → SyncInitialView              → Subject = scene (no change)
 ///   MarkerItemNode /
-///   canvas click      → SetMarker(marker, scene)          → Subject = marker subclass
-///   canvas deselect   → SetMarker(null, scene)            → Subject = scene
+///   canvas click      → SetMarker(marker, scene)     → Subject = marker subclass
+///   canvas deselect   → SetMarker(null, scene)       → Subject = scene
 /// </summary>
 public partial class PropertiesViewModel : Tool
 {
     private readonly MainWindowViewModel _main;
-    private Scene?              _scene;
-    private MarkerBase?         _marker;
-    private TourSubject?        _tourSubject;
-    private InitialViewSubject? _initialViewSubject;
+    private Scene?       _scene;
+    private MarkerBase?  _marker;
+    private TourSubject? _tourSubject;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CanDeleteMarker))]
@@ -66,24 +64,6 @@ public partial class PropertiesViewModel : Tool
         Subject = scene;
     }
 
-    /// <summary>
-    /// Shows only Position for the scene's initial viewpoint.
-    /// Called when the user clicks the POV indicator on the canvas, or selects
-    /// the (now hidden) InitialPovNode programmatically.
-    /// </summary>
-    public void SetInitialPov(Scene? scene)
-    {
-        DropAll();
-        _scene = scene;
-        if (scene == null) { Subject = null; return; }
-
-        // Cache one subject per scene to avoid allocations on repeated clicks.
-        if (_initialViewSubject?.Scene != scene)
-            _initialViewSubject = new InitialViewSubject(scene);
-
-        Subject = _initialViewSubject;
-    }
-
     public void SetMarker(MarkerBase? marker, Scene? scene)
     {
         DropAll();
@@ -109,28 +89,17 @@ public partial class PropertiesViewModel : Tool
 
     /// <summary>
     /// Called on every frame of a canvas initial-view drag.
-    /// On the first call, switches the Properties panel to show the initial POV subject.
-    /// On subsequent calls (same scene), just refreshes the Position cell.
-    /// Scene.Initial[] is already updated by the canvas before this is called.
+    /// Scene.Initial.set already notifies InitialPosition, so the PropertyGrid
+    /// refreshes automatically — we only need to ensure the scene is showing.
     /// </summary>
     public void SyncInitialView(double yaw, double pitch)
     {
-        if (Subject is InitialViewSubject ivs && ivs.Scene == _scene)
-        {
-            // Already showing this scene's initial POV — refresh the position cell.
-            ivs.NotifyPositionChanged();
-        }
-        else if (_scene != null)
-        {
-            // First drag event (or Properties was showing something else).
-            // Switch to InitialViewSubject; the grid rebuild reads Scene.Initial[]
-            // which the canvas already updated, so the cell shows the right value.
-            SetInitialPov(_scene);
-        }
+        if (Subject != _scene && _scene != null)
+            SetScene(_scene);
     }
 
     /// <summary>
-    /// Called during canvas marker drag.  Coords[] are already updated by the
+    /// Called during canvas marker drag.  Coords are already updated by the
     /// canvas; this fires PropertyChanged(Position) so the grid refreshes.
     /// </summary>
     public void UpdateMarkerCoords(double yaw, double pitch)
@@ -138,7 +107,6 @@ public partial class PropertiesViewModel : Tool
 
     // ── Private helpers ───────────────────────────────────────────────────────
 
-    /// <summary>Unsubscribes from all tracked subjects and clears fields.</summary>
     private void DropAll()
     {
         if (_marker != null)
