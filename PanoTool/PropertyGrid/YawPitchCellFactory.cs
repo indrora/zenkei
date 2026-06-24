@@ -20,18 +20,26 @@ public class YawPitchCellFactory : AbstractCellEditFactory
         if (context.Property.PropertyType != typeof(YawPitch)) return null;
 
         var ctrl = new YawPitchControl();
+        ctrl.LayoutUpdated += (_, _) =>
+        {
+            // Ensure the control is sized to fill the cell.        
+            ctrl.SetValue(Grid.ColumnProperty, 0);
+            ctrl.SetValue(Grid.ColumnSpanProperty, 2);
+        };
 
         // PositionChanged fires only on user input, never during SetYawPitch.
         ctrl.PositionChanged += (_, yp) =>
             SetAndRaise(context, ctrl, yp, context.GetValue());
 
         return ctrl;
+
     }
 
     public override bool HandlePropertyChanged(PropertyCellContext context)
     {
-        if (context.Property.PropertyType != typeof(YawPitch)) return false;
         if (context.CellEdit is not YawPitchControl ctrl) return false;
+
+        if (context.Property.PropertyType != typeof(YawPitch)) return false;
 
         ValidateProperty(ctrl, context.Property, context.Target);
 

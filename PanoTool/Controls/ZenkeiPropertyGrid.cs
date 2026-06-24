@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using PGControl = Avalonia.PropertyGrid.Controls.PropertyGrid;
 using Zenkei.PropertyGrid;
+using Avalonia.Controls;
 
 namespace Zenkei.Controls;
 
@@ -29,5 +30,18 @@ public class ZenkeiPropertyGrid : PGControl
         Factories.AddFactory(new MultilineTextCellFactory());
         // SceneIdCellFactory reads SceneNames lazily via the lambda so it always sees the current list.
         Factories.AddFactory(new SceneIdCellFactory(() => SceneNames));
+
+
+        this.DefaultOptionsButton.Content = new FluentIcons.Avalonia.SymbolIcon{ Symbol = FluentIcons.Common.Symbol.Filter };
+
+        this.DefaultOptionsButton.IsVisible = false;
+        this.IsQuickFilterVisible = false; 
+        this.IsAutoNameWidth = true;
+        this.IsTitleVisible = false;
+        
+        this.LayoutStyle = Avalonia.PropertyGrid.ViewModels.PropertyGridLayoutStyle.Inline;  
+
+        
+    
     }
 }
