@@ -70,6 +70,9 @@ public partial class MainWindow : Window
 
         vm.InputDialogDelegate = async (title, prompt, defaultValue) =>
             await new InputDialog(title, prompt, defaultValue).ShowAsync(this);
+
+        vm.OpenSettingsDelegate = async () =>
+            await new SettingsWindow().ShowDialog(this);
     }
 
     private static FilePickerFileType[] FiltersFrom(string[] patterns)

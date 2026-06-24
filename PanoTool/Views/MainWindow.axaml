@@ -38,6 +38,10 @@
         <MenuItem Header="_Export to HTML…" Command="{Binding ExportCommand}"
                   InputGesture="Ctrl+E"/>
       </MenuItem>
+      <MenuItem Header="_Edit">
+        <MenuItem Header="_Preferences…" Command="{Binding OpenSettingsCommand}"
+                  InputGesture="Ctrl+,"/>
+      </MenuItem>
     </Menu>
 
     <!-- ── Toolbar ──────────────────────────────────────────────────────── -->

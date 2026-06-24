@@ -41,13 +41,14 @@ public partial class MainWindowViewModel : ViewModelBase
     // Maps sceneId → open editor (so we reuse tabs instead of duplicating)
     private readonly Dictionary<string, PanoramaEditorViewModel> _editors = new();
 
-    // Delegate for showing file dialogs — set by the View
+    // Delegates for showing dialogs — set by the View
     public Func<string, string[], Task<IEnumerable<string>>>? FilePickerDelegate { get; set; }
     public Func<string, string[], Task<string?>>? SaveFilePickerDelegate { get; set; }
     public Func<string, string[], Task<string?>>? OpenFilePickerDelegate { get; set; }
     public Func<string, string, Task>? ShowErrorDelegate { get; set; }
     // title, prompt, defaultValue → user-entered string or null on cancel
     public Func<string, string, string, Task<string?>>? InputDialogDelegate { get; set; }
+    public Func<Task>? OpenSettingsDelegate { get; set; }
 
     public MainWindowViewModel()
     {
@@ -61,6 +62,10 @@ public partial class MainWindowViewModel : ViewModelBase
 
     /// <summary>Forwards to SceneListViewModel.AddImageCommand for toolbar binding.</summary>
     public ICommand AddSceneCommand => SceneList.AddImageCommand;
+
+    [RelayCommand]
+    private async Task OpenSettings() =>
+        await (OpenSettingsDelegate?.Invoke() ?? Task.CompletedTask);
 
     // ── Document operations ───────────────────────────────────────────────────
 

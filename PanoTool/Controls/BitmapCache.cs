@@ -14,9 +14,9 @@ namespace Zenkei.Controls;
 /// </summary>
 internal static class BitmapCache
 {
-    // Max width for the editor display copy.
+    // Set from SettingsService.Apply() on startup and when preferences change.
     // Full-res export copies source files directly via File.Copy.
-    private const int MaxEditorWidth = 2048;
+    internal static int MaxEditorWidth { get; set; } = 2048;
 
     private static readonly Dictionary<string, WeakReference<Bitmap>> _cache = new();
 

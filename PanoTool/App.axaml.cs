@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Media.Imaging;
 using Avalonia.Markup.Xaml;
+using Zenkei.Services;
 using Zenkei.ViewModels;
 using Zenkei.Views;
 
@@ -17,6 +18,10 @@ public partial class App : Application
 
     public override void OnFrameworkInitializationCompleted()
     {
+        // Load and apply user preferences before creating any windows.
+        SettingsService.Load();
+        SettingsService.Apply();
+
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             var vm = new MainWindowViewModel();

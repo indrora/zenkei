@@ -6,7 +6,7 @@
              xmlns:views="using:Zenkei.Views"
              xmlns:dockFluent="using:Dock.Avalonia.Themes.Fluent"
              xmlns:dockControls="using:Dock.Avalonia.Controls"
-             RequestedThemeVariant="Dark">
+>
 
     <Application.DataTemplates>
         <!-- Explicit templates for Dock tool/document ViewModels -->
