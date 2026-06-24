@@ -1,5 +1,4 @@
 using System.Globalization;
-using System.Linq;
 using System.Text;
 using System.Text.Json;
 using Zenkei.Models;
@@ -110,11 +109,10 @@ public static class PannellumExporter
             jw.WriteNumber("pitch", Round(initPitch));
             jw.WriteNumber("hfov", scene.HFov ?? doc.Default.HFov);
 
-            var realMarkers = scene.Markers.Where(m => m is not InitialMarker).ToList();
-            if (realMarkers.Count > 0)
+            if (scene.Markers.Count > 0)
             {
                 jw.WriteStartArray("hotSpots");
-                foreach (var m in realMarkers)
+                foreach (var m in scene.Markers)
                     WriteHotspot(jw, m, doc, iconCssClass);
                 jw.WriteEndArray();
             }

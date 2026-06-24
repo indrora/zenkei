@@ -91,9 +91,6 @@ public partial class PropertiesViewModel : Tool
 
         if (marker == null) { Subject = scene; return; }
 
-        // The InitialMarker is synthetic; show the initial-view subject instead.
-        if (marker is InitialMarker) { SetInitialPov(scene); return; }
-
         _marker = marker;
         marker.PropertyChanged += OnMarkerChanged;
         Subject = marker;

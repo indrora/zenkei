@@ -40,9 +40,6 @@ public class Scene : INotifyPropertyChanged
     [Browsable(false)]
     public string? BaseDirectory { get; set; }
 
-    /// <summary>
-    /// Resolves relative Image paths against the tour file's folder.
-    /// </summary>
     [Browsable(false)]
     public string ResolvedImagePath =>
         string.IsNullOrEmpty(Image) || Path.IsPathRooted(Image) || string.IsNullOrEmpty(BaseDirectory)
@@ -50,16 +47,15 @@ public class Scene : INotifyPropertyChanged
             : Path.Combine(BaseDirectory, Image);
 
     // Radians — read/written by the canvas and serializer; degrees via InitialPosition below.
+    private YawPitch _initial;
     [Browsable(false)]
     public YawPitch Initial
     {
-        get => InitialMarker.Coords ?? new YawPitch(0, 0);
+        get => _initial;
         set
         {
-            InitialMarker.Coords = value;
-            InitialMarker.NotifyCoordsChanged();
+            _initial = value;
             OnPropertyChanged();
-            // Keep the browsable degree-view in sync when the canvas updates us directly.
             OnPropertyChanged(nameof(InitialPosition));
         }
     }
@@ -78,27 +74,6 @@ public class Scene : INotifyPropertyChanged
             Initial = new YawPitch(value.Yaw   * Math.PI / 180.0,
                                    value.Pitch * Math.PI / 180.0);
             OnPropertyChanged();
-        }
-    }
-
-    public InitialMarker InitialMarker
-    {
-        get
-        {
-            var existing = Markers.OfType<InitialMarker>().FirstOrDefault();
-            if (existing == null)
-            {
-                existing = new InitialMarker();
-                Markers.Add(existing);
-            }
-            return existing;
-        } 
-        set
-        {
-            var existing = Markers.OfType<InitialMarker>().FirstOrDefault();
-            if (existing != null)
-                Markers.Remove(existing);
-            Markers.Add(value);
         }
     }
 

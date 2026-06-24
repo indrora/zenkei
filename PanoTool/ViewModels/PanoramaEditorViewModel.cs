@@ -52,12 +52,12 @@ public partial class PanoramaEditorViewModel : Document
         _main.Properties.SetMarker(value, Scene);
     }
 
-    public bool CanDeleteMarker => SelectedMarker != null && SelectedMarker is not InitialMarker;
+    public bool CanDeleteMarker => SelectedMarker != null;
 
     [RelayCommand(CanExecute = nameof(CanDeleteMarker))]
     private void DeleteSelectedMarker()
     {
-        if (SelectedMarker == null || SelectedMarker is InitialMarker) return;
+        if (SelectedMarker == null) return;
         Scene.Markers.Remove(SelectedMarker);
         SelectedMarker = null;
         _main.Properties.SetScene(Scene);

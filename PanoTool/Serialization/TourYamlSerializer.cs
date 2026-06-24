@@ -1,5 +1,4 @@
 using System.Globalization;
-using System.Linq;
 using System.Text;
 using Zenkei.Models;
 using Zenkei.Models.Markers;
@@ -76,8 +75,7 @@ public static class TourYamlSerializer
 
         if (TryGetSequence(node, "initial", out var initialSeq) && initialSeq.Children.Count >= 2)
         {
-            // Store radians directly into Coords; bypasses Position.set (which expects degrees).
-            scene.InitialMarker.Coords = new YawPitch(
+            scene.Initial = new YawPitch(
                 ParseDouble(Scalar(initialSeq.Children[0])),
                 ParseDouble(Scalar(initialSeq.Children[1]))
             );
@@ -154,11 +152,10 @@ public static class TourYamlSerializer
             // initial is in radians (Pannellum format); Scene.Initial.Yaw/Pitch are radians.
             sceneMap.Add("initial", FlowSeq(NumNode(scene.Initial.Yaw), NumNode(scene.Initial.Pitch)));
 
-            var realMarkers = scene.Markers.Where(m => m is not InitialMarker).ToList();
-            if (realMarkers.Count > 0)
+            if (scene.Markers.Count > 0)
             {
                 var markersSeq = new YamlSequenceNode();
-                foreach (var m in realMarkers)
+                foreach (var m in scene.Markers)
                     markersSeq.Add(BuildMarkerNode(m));
                 sceneMap.Add("markers", markersSeq);
             }

@@ -254,7 +254,7 @@ public class PanoramaCanvas : Control
 
     private void DrawMarker(DrawingContext context, MarkerBase m, bool selected)
     {
-        if (m is InitialMarker || !m.Coords.HasValue) return;
+        if (!m.Coords.HasValue) return;
         var (cx, cy) = CoordsToCanvas(m.Coords.Value.Yaw, m.Coords.Value.Pitch);
         var center = new Point(cx, cy);
 
@@ -333,7 +333,7 @@ public class PanoramaCanvas : Control
         if (Scene == null) return null;
         foreach (var m in Scene.Markers)
         {
-            if (m is InitialMarker || !m.Coords.HasValue) continue;
+            if (!m.Coords.HasValue) continue;
             var (cx, cy) = CoordsToCanvas(m.Coords.Value.Yaw, m.Coords.Value.Pitch);
             var dx = (float)pt.X - cx;
             var dy = (float)pt.Y - cy;
